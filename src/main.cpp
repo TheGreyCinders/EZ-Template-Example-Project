@@ -1,136 +1,168 @@
 #include "main.h"
+#define LEFT_1_PORT -1
+#define LEFT_2_PORT -2
+#define LEFT_3_PORT -3
+#define LEFT_4_PORT -4
 
-pros::Motor drive_left_motor_1{1};
+#define RIGHT_4_PORT 6
+#define RIGHT_3_PORT 8
+#define RIGHT_2_PORT 9
+#define RIGHT_1_PORT 10
 
-std::vector<pros::Motor> drive_left_motors{{drive_left_motor_1}};
+#define INTAKE_PORT 12
+#define CONVEYOR_PORT -5
+#define CONVEYOR_2_PORT -7
 
-pros::Motor drive_right_motor_1{2};
+#define MOGO_PNEUMATICS 'h'
 
-std::vector<pros::Motor> drive_right_motors{{drive_right_motor_1}};
-plattipi::robot::subsystems::DriveTrain drive_train{drive_left_motors,drive_right_motors};
-plattipi::robot::Robot robot1{drive_train};
+#define COLOR_SENSOR_PORT 17
 
-/////
-// For installation, upgrading, documentations, and tutorials, check out our website!
-// https://ez-robotics.github.io/EZ-Template/
-/////
+#define DRIVE_VELOCITY 600
+#define INTAKE_VELOCITY -600
+#define CONVEYOR_VELOCITY 600
 
-// Chassis constructor
-ez::Drive chassis(
-    // These are your drive motors, the first motor is used for sensing!
-    {1, 2, 3},     // Left Chassis Ports (negative port will reverse it!)
-    {-4, -5, -6},  // Right Chassis Ports (negative port will reverse it!)
+#define ALLIANCE 1
+#define OPP_ALLIANCE 2
+//red 1
+//blue 2
 
-    7,      // IMU Port
-    4.125,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
-    343);   // Wheel RPM
 
-/**
- * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
- */
+
+//Definitions
+pros::MotorGroup leftDrive (
+	{LEFT_1_PORT, LEFT_2_PORT, LEFT_3_PORT, LEFT_4_PORT}, 
+	pros::v5::MotorCartridge::blue, 
+	pros::v5::MotorUnits::degrees
+);
+
+pros::MotorGroup rightDrive (
+	{RIGHT_1_PORT, RIGHT_2_PORT, RIGHT_3_PORT, RIGHT_4_PORT},
+	pros::v5::MotorCartridge::blue,
+	pros::v5::MotorUnits::degrees
+);
+
+pros::MotorGroup conveyor (
+	{CONVEYOR_PORT, CONVEYOR_2_PORT}, 
+	pros::v5::MotorCartridge::green, 
+	pros::v5::MotorUnits::degrees
+);
+
+pros::Motor intake (
+	INTAKE_PORT,
+	pros::v5::MotorCartridge::blue,
+	pros::v5::MotorUnits::degrees
+);
+
+pros::ADIDigitalOut mogoPiston (MOGO_PNEUMATICS);
+
+pros::Optical colorSensor(COLOR_SENSOR_PORT);
+
+pros::Controller gp1(CONTROLLER_MASTER);
+
+bool mogoGrabbed = false;
+
+//custom methods
+double convertToVelocity(double joystick) {
+	return (joystick*DRIVE_VELOCITY)/127;
+}
+
+int detectColor(double hue) {
+	if (hue < 10 || hue > 350) {
+		return 1;
+	} else if (hue > 190 && hue < 230) {
+		return 2;
+	} else {
+		return 0;
+	}
+}
+
+int ringColor;
+bool chuckRing = false;
+int timer = 0;
+
+void autoChucker(int velocity) {
+
+	ringColor = detectColor(colorSensor.get_hue());
+	if (chuckRing == true) {
+		timer++;
+		if (timer > 90 && timer < 110) {
+			conveyor.move_velocity(0);
+		} else if (timer > 110) {
+			chuckRing = false;
+			timer = 0;
+		}
+	} else {
+		conveyor.move_velocity(velocity);
+		if (ringColor == OPP_ALLIANCE) {
+			chuckRing = true;
+		}
+	}
+
+}
+
+//robot methods
 void initialize() {
-  // Print our branding over your terminal :D
-  ez::ez_template_print();
+	pros::lcd::initialize();
+	leftDrive.set_brake_mode_all(MOTOR_BRAKE_BRAKE);
+	rightDrive.set_brake_mode_all(MOTOR_BRAKE_BRAKE);
+	conveyor.set_brake_mode_all(MOTOR_BRAKE_BRAKE);
+	intake.set_brake_mode_all(MOTOR_BRAKE_COAST);
 
-  pros::delay(500);  // Stop the user from doing anything while legacy ports configure
+	leftDrive.set_reversed(false, 0);
+	leftDrive.set_reversed(true, 1);
+	leftDrive.set_reversed(false, 2);
+	leftDrive.set_reversed(true, 3);
 
-  // Configure your chassis controls
-  chassis.opcontrol_curve_buttons_toggle(true);  // Enables modifying the controller curve with buttons on the joysticks
-  chassis.opcontrol_drive_activebrake_set(0);    // Sets the active brake kP. We recommend ~2.  0 will disable.
-  chassis.opcontrol_curve_default_set(0, 0);     // Defaults for curve. If using tank, only the first parameter is used. (Comment this line out if you have an SD card!)
-
-  // Set the drive to your own constants from autons.cpp!
-  default_constants();
-
-  // These are already defaulted to these buttons, but you can change the left/right curve buttons here!
-  // chassis.opcontrol_curve_buttons_left_set(pros::E_CONTROLLER_DIGITAL_LEFT, pros::E_CONTROLLER_DIGITAL_RIGHT);  // If using tank, only the left side is used.
-  // chassis.opcontrol_curve_buttons_right_set(pros::E_CONTROLLER_DIGITAL_Y, pros::E_CONTROLLER_DIGITAL_A);
-
-  // Autonomous Selector using LLEMU
-  ez::as::auton_selector.autons_add({
-      Auton("Example Drive\n\nDrive forward and come back.", drive_example),
-      Auton("Example Turn\n\nTurn 3 times.", turn_example),
-      Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
-      Auton("Drive and Turn\n\nSlow down during drive.", wait_until_change_speed),
-      Auton("Swing Example\n\nSwing in an 'S' curve", swing_example),
-      Auton("Motion Chaining\n\nDrive forward, turn, and come back, but blend everything together :D", motion_chaining),
-      Auton("Combine all 3 movements", combining_movements),
-      Auton("Interference\n\nAfter driving forward, robot performs differently if interfered or not.", interfered_example),
-  });
-
-  // Initialize chassis and auton selector
-  chassis.initialize();
-  ez::as::initialize();
-  master.rumble(".");
+	rightDrive.set_reversed(true, 0);
+	rightDrive.set_reversed(false, 1);
+	rightDrive.set_reversed(true, 2);
+	rightDrive.set_reversed(false, 3);
+	
+	conveyor.set_reversed(true, 0);
 }
 
-/**
- * Runs while the robot is in the disabled state of Field Management System or
- * the VEX Competition Switch, following either autonomous or opcontrol. When
- * the robot is enabled, this task will exit.
- */
-void disabled() {
-  // . . .
-}
+void disable() {}
 
-/**
- * Runs after initialize(), and before autonomous when connected to the Field
- * Management System or the VEX Competition Switch. This is intended for
- * competition-specific initialization routines, such as an autonomous selector
- * on the LCD.
- *
- * This task will exit when the robot is enabled and autonomous or opcontrol
- * starts.
- */
+
 void competition_initialize() {
-  // . . .
+	pros::lcd::initialize();
 }
 
-/**
- * Runs the user autonomous code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the autonomous
- * mode. Alternatively, this function may be called in initialize or opcontrol
- * for non-competition testing purposes.
- *
- * If the robot is disabled or communications is lost, the autonomous task
- * will be stopped. Re-enabling the robot will restart the task, not re-start it
- * from where it left off.
- */
-void autonomous() {
-  chassis.pid_targets_reset();                // Resets PID targets to 0
-  chassis.drive_imu_reset();                  // Reset gyro position to 0
-  chassis.drive_sensor_reset();               // Reset drive sensors to 0
-  chassis.drive_brake_set(MOTOR_BRAKE_HOLD);  // Set motors to hold.  This helps autonomous consistency
+void autonomous() {}
 
-  ez::as::auton_selector.selected_auton_call();  // Calls selected auton from autonomous selector
-}
-
-/**
- * Runs the operator control code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the operator
- * control mode.
- *
- * If no competition control is connected, this function will run immediately
- * following initialize().
- *
- * If the robot is disabled or communications is lost, the
- * operator control task will be stopped. Re-enabling the robot will restart the
- * task, not resume it from where it left off.
- */
 void opcontrol() {
-  // This is preference to what you like to drive on
-  pros::motor_brake_mode_e_t driver_preference_brake = MOTOR_BRAKE_COAST;
+	while (true) {
+		int turn = convertToVelocity(gp1.get_analog(ANALOG_LEFT_Y))/2;
+		int power = convertToVelocity(gp1.get_analog(ANALOG_RIGHT_X))/2;
 
-  chassis.drive_brake_set(driver_preference_brake);
+		leftDrive.move_velocity((power + (turn)) * -1);
+		rightDrive.move_velocity((power - (turn)) *  -1);
 
-  while (true) {
-    robot1.drive(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y),master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
-    
-    pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
-  }
+		if (gp1.get_digital(DIGITAL_A)) {
+			intake.move_velocity(INTAKE_VELOCITY);
+			autoChucker(CONVEYOR_VELOCITY);
+		} else if (gp1.get_digital(DIGITAL_B)) {
+			intake.move_velocity(-INTAKE_VELOCITY);
+			autoChucker(-CONVEYOR_VELOCITY);
+		} else {
+			intake.move_velocity(0);
+			conveyor.move_velocity(0);
+		}
+
+		if (gp1.get_digital_new_press(DIGITAL_R1)) {
+			if (mogoGrabbed) {
+				mogoPiston.set_value(false);
+				mogoGrabbed = false;
+			} else {
+				mogoPiston.set_value(true);
+				mogoGrabbed = true;
+			}
+		}
+
+		pros::lcd::set_text(1, std::to_string(detectColor(colorSensor.get_hue())));
+		pros::lcd::set_text(2, std::to_string(timer));
+		pros::lcd::set_text(3, std::to_string(chuckRing));
+		pros::lcd::set_text(4, std::to_string(colorSensor.get_hue()));
+		pros::delay(2);
+	}
 }
