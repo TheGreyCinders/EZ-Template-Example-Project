@@ -13,6 +13,14 @@ void DriveTrain::drive(double left_power, double right_power){
         motor.move(right_power);
     }
 }
+void DriveTrain::initialize() {
+    for(auto motor: m_left_motors){
+        motor.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+    for(auto motor: m_right_motors){
+        motor.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+}
 }  // namespace subsystems
 }  // namespace robot
 }  // namespace plattipi

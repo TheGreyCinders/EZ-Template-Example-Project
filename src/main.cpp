@@ -1,19 +1,20 @@
 #include "main.h"
-#define LEFT_1_PORT -1
+
+#define LEFT_1_PORT 1
 #define LEFT_2_PORT -2
-#define LEFT_3_PORT -3
+#define LEFT_3_PORT 3
 #define LEFT_4_PORT -4
 
-#define RIGHT_4_PORT 6
-#define RIGHT_3_PORT 8
+#define RIGHT_4_PORT 7
+#define RIGHT_3_PORT -8
 #define RIGHT_2_PORT 9
-#define RIGHT_1_PORT 10
+#define RIGHT_1_PORT -10
 
 #define INTAKE_PORT 12
 #define CONVEYOR_PORT -5
-#define CONVEYOR_2_PORT -7
+#define CONVEYOR_2_PORT 6
 
-#define MOGO_PNEUMATICS 'h'
+#define MOGO_PNEUMATICS 'g'
 
 #define COLOR_SENSOR_PORT 17
 
@@ -26,20 +27,21 @@
 //red 1
 //blue 2
 
+pros::Motor leftMotor1 (LEFT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees);
+pros::Motor leftMotor2 (LEFT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees);
+pros::Motor leftMotor3 (LEFT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees);
+pros::Motor leftMotor4 (LEFT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees);
 
+pros::Motor rightMotor1 (RIGHT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees);
+pros::Motor rightMotor2 (RIGHT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees);
+pros::Motor rightMotor3 (RIGHT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees);
+pros::Motor rightMotor4 (RIGHT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees);
+
+std::vector<pros::Motor> leftDrive{{leftMotor1, leftMotor2, leftMotor3, leftMotor4}};
+std::vector<pros::Motor> rightDrive{{rightMotor1, rightMotor2, rightMotor3, rightMotor4}};
 
 //Definitions
-pros::MotorGroup leftDrive (
-	{LEFT_1_PORT, LEFT_2_PORT, LEFT_3_PORT, LEFT_4_PORT}, 
-	pros::v5::MotorCartridge::blue, 
-	pros::v5::MotorUnits::degrees
-);
-
-pros::MotorGroup rightDrive (
-	{RIGHT_1_PORT, RIGHT_2_PORT, RIGHT_3_PORT, RIGHT_4_PORT},
-	pros::v5::MotorCartridge::blue,
-	pros::v5::MotorUnits::degrees
-);
+plattipi::robot::subsystems::DriveTrain drive{leftDrive, rightDrive};
 
 pros::MotorGroup conveyor (
 	{CONVEYOR_PORT, CONVEYOR_2_PORT}, 
@@ -53,7 +55,7 @@ pros::Motor intake (
 	pros::v5::MotorUnits::degrees
 );
 
-pros::ADIDigitalOut mogoPiston (MOGO_PNEUMATICS);
+pros::adi::DigitalOut mogoPiston (MOGO_PNEUMATICS);
 
 pros::Optical colorSensor(COLOR_SENSOR_PORT);
 
@@ -80,6 +82,8 @@ int ringColor;
 bool chuckRing = false;
 int timer = 0;
 
+int turn, power, leftPower, rightPower;
+
 void autoChucker(int velocity) {
 
 	ringColor = detectColor(colorSensor.get_hue());
@@ -103,20 +107,9 @@ void autoChucker(int velocity) {
 //robot methods
 void initialize() {
 	pros::lcd::initialize();
-	leftDrive.set_brake_mode_all(MOTOR_BRAKE_BRAKE);
-	rightDrive.set_brake_mode_all(MOTOR_BRAKE_BRAKE);
+	drive.initialize();
 	conveyor.set_brake_mode_all(MOTOR_BRAKE_BRAKE);
 	intake.set_brake_mode_all(MOTOR_BRAKE_COAST);
-
-	leftDrive.set_reversed(false, 0);
-	leftDrive.set_reversed(true, 1);
-	leftDrive.set_reversed(false, 2);
-	leftDrive.set_reversed(true, 3);
-
-	rightDrive.set_reversed(true, 0);
-	rightDrive.set_reversed(false, 1);
-	rightDrive.set_reversed(true, 2);
-	rightDrive.set_reversed(false, 3);
 	
 	conveyor.set_reversed(true, 0);
 }
@@ -132,18 +125,25 @@ void autonomous() {}
 
 void opcontrol() {
 	while (true) {
-		int turn = convertToVelocity(gp1.get_analog(ANALOG_LEFT_Y))/2;
-		int power = convertToVelocity(gp1.get_analog(ANALOG_RIGHT_X))/2;
+		turn = convertToVelocity(gp1.get_analog(ANALOG_LEFT_Y))/2;
+		power = convertToVelocity(gp1.get_analog(ANALOG_RIGHT_X))/2;
 
-		leftDrive.move_velocity((power + (turn)) * -1);
-		rightDrive.move_velocity((power - (turn)) *  -1);
+		leftPower = (power + turn) * -1;
+		rightPower = (power - turn) * -1;
+
+		drive.drive(leftPower, rightPower);
+
+		// leftDrive.move_velocity((power + (turn)) * -1);
+		// rightDrive.move_velocity((power - (turn)) *  -1);
 
 		if (gp1.get_digital(DIGITAL_A)) {
 			intake.move_velocity(INTAKE_VELOCITY);
-			autoChucker(CONVEYOR_VELOCITY);
+			conveyor.move_velocity(CONVEYOR_VELOCITY);
+			// autoChucker(CONVEYOR_VELOCITY);
 		} else if (gp1.get_digital(DIGITAL_B)) {
 			intake.move_velocity(-INTAKE_VELOCITY);
-			autoChucker(-CONVEYOR_VELOCITY);
+			conveyor.move_velocity(-CONVEYOR_VELOCITY);
+			// autoChucker(-CONVEYOR_VELOCITY);
 		} else {
 			intake.move_velocity(0);
 			conveyor.move_velocity(0);
