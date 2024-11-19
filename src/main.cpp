@@ -18,7 +18,7 @@ static constexpr int8_t MOGO_PNEUMATICS = 'g';
 
 static constexpr int8_t ARM_ONE = -14;
 static constexpr int8_t ARM_TWO = 15;
-static constexpr int8_t in_out = 16;
+static constexpr int8_t EXTENSION = -16;
 
 static constexpr int8_t COLOR_SENSOR_PORT = 11;
 
@@ -30,12 +30,13 @@ static constexpr int8_t ALLIANCE = 1;
 static constexpr int8_t OPP_ALLIANCE = 2;
 
 static constexpr double ARM_DOWN = 0;
-static constexpr double ARM_UP = 200;
+static constexpr double ARM_UP = 225;
 static constexpr double ARM_ROTATE_SPEED = 85;
 
 static constexpr double EXT_IN = 0;
-static constexpr double EXT_OUT = 820;
-static constexpr double EXT_SPEED = 200;
+static constexpr double EXT_STORE = 70;
+static constexpr double EXT_OUT = 280;
+static constexpr double EXT_SPEED = 600;
 // red 1
 // blue 2
 
@@ -49,7 +50,7 @@ pros::Motor rightMotor2{RIGHT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::
 pros::Motor rightMotor3{RIGHT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
 pros::Motor rightMotor4{RIGHT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
 
-pros::Motor extension{in_out, pros::v5::MotorCartridge::green, pros::v5::MotorUnits::degrees};
+pros::Motor extension{EXTENSION, pros::v5::MotorCartridge::green, pros::v5::MotorUnits::degrees};
 pros::Motor armleft{ARM_ONE, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
 pros::Motor armright{ARM_TWO, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
 
@@ -126,7 +127,10 @@ void initialize() {
   drive.initialize();
   conveyor.set_brake_mode_all(MOTOR_BRAKE_BRAKE);
   intake.set_brake_mode_all(MOTOR_BRAKE_COAST);
-  extension.set_reversed(true);
+  for (auto motor : armRotation) {
+    motor.set_brake_mode(MOTOR_BRAKE_HOLD);
+  }
+  extension.set_brake_mode(MOTOR_BRAKE_HOLD);
   conveyor.set_reversed(true, 0);
 }
 
@@ -147,10 +151,11 @@ enum ArmPosition{
 
 void opcontrol() {
   bool arm_moving = false;
-  bool arm_moving_one = false;
+  bool rotation_moving = false;
   bool extension_move = false;
   double arm_start_time, arm_current_time;
-  enum ArmPosition arm_pause=loading;
+  enum ArmPosition armPos=loading;
+  enum ArmPosition pastArmPos=holding;
   int currentExtension;
   while (true) {
     currentExtension = extension.get_position();
@@ -214,44 +219,103 @@ void opcontrol() {
 //macros
     if (gp1.get_digital_new_press(DIGITAL_L1)) {
       arm_moving=true;
-      arm_moving_one = true;
+      rotation_moving = true;
       extension_move = true;
-      if (arm_pause==loading){
-        arm_pause=holding;
+      pastArmPos = armPos;
+      if (armPos==loading){
+        armPos=holding;
       }
-      else if (arm_pause==holding) {
-        arm_pause = loading;
+      else if (armPos==holding || armPos==storing) {
+        armPos = loading;
+      }
+    }
+
+    if (gp1.get_digital_new_press(DIGITAL_L2)) {
+      arm_moving = true;
+      rotation_moving = true;
+      extension_move = true;
+      pastArmPos = armPos;
+      if (armPos==loading) {
+        armPos = storing;
+      } else if (armPos==holding || armPos==storing) {
+        armPos=loading;
       }
     }
     
     if (arm_moving=true) {
-      if (arm_pause == loading) {
+
+      //holding macros
+      if (armPos == holding) {
         //loading-holding macro
-        if (arm_moving_one == true) {
-          for (auto motor : armRotation) {
-            motor.move_absolute(ARM_UP, -ARM_ROTATE_SPEED);
+        if (pastArmPos == loading) {
+          if (rotation_moving == true) {
+            for (auto motor : armRotation) {
+              motor.move_absolute(ARM_UP, -ARM_ROTATE_SPEED);
+            }
+            rotation_moving = false;
           }
-          arm_moving_one = false;
+          if (extension_move == true && armRotation[0].get_position() > 125) {
+            extension.move_absolute(EXT_OUT, -EXT_SPEED);
+            extension_move = false;
+          }
         }
-        if (extension_move == true && armRotation[0].get_position() > 125) {
-          extension.move_absolute(EXT_OUT, -EXT_SPEED);
-          extension_move = false;
+        //storing-holding macro
+        if (pastArmPos == holding) {
+          //case is impossible
         }
-      } else if (arm_pause == holding) {
+      } 
+
+      //loading macros
+      else if (armPos == loading) {
         //holding-loading macro
-        if (extension_move == true) {
-          extension.move_absolute(EXT_IN, EXT_SPEED);
-          extension_move = false;
-        }
-        if (arm_moving_one == true && extension.get_position() < 200) {
-          for (auto motor : armRotation) {
-            motor.move_absolute(ARM_DOWN, ARM_ROTATE_SPEED);
+        if (pastArmPos == holding) {
+          if (extension_move == true) {
+            extension.move_absolute(EXT_IN, EXT_SPEED);
+            extension_move = false;
           }
-          arm_moving_one = false;
+          if (rotation_moving == true && extension.get_position() < 200) {
+            for (auto motor : armRotation) {
+              motor.move_absolute(ARM_DOWN, ARM_ROTATE_SPEED);
+            }
+            rotation_moving = false;
+          }
+        }
+        //storing-loading macro
+        if (pastArmPos == storing) {
+          if (extension_move == true) {
+            extension.move_absolute(EXT_IN, EXT_SPEED);
+            extension_move = false;
+          }
+          rotation_moving = true;
         }
       }
+
+      else if (armPos == storing) {
+        //storing-holding macro
+        if (pastArmPos == holding) {
+          if (extension_move == true) {
+            extension.move_absolute(EXT_STORE, EXT_SPEED);
+            extension_move = false;
+          }
+          if (rotation_moving == true && extension.get_position() < 200) {
+            for (auto motor : armRotation) {
+              motor.move_absolute(ARM_DOWN, ARM_ROTATE_SPEED);
+            }
+            rotation_moving = false;
+          }
+        }
+        //loading-storing macro
+        if (pastArmPos == loading) {
+          if (extension_move == true) {
+            extension.move_absolute(EXT_STORE, EXT_SPEED);
+            extension_move = false;
+          }
+          rotation_moving = true;
+        }
+      }
+
       //exit sequence
-      if (!extension_move && !arm_moving_one) {
+      if (!extension_move && !rotation_moving) {
         arm_moving = false;
       }
     }
@@ -261,7 +325,7 @@ void opcontrol() {
     pros::lcd::set_text(0, std::to_string(extension.get_position()));
     pros::lcd::set_text(1, std::to_string(armleft.get_position()));
     pros::lcd::set_text(2, std::to_string(armright.get_position()));
-    pros::lcd::set_text(3, std::to_string(arm_pause));
+    pros::lcd::set_text(3, std::to_string(armPos));
     pros::delay(10);
   
   }
