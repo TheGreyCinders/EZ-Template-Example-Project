@@ -1,20 +1,20 @@
 #include "main.h"
 
-static constexpr int8_t LEFT_1_PORT = 1;
-static constexpr int8_t LEFT_2_PORT = -2;
-static constexpr int8_t LEFT_3_PORT = 3;
-static constexpr int8_t LEFT_4_PORT = -4;
+static constexpr int8_t LEFT_1_PORT = -1;
+static constexpr int8_t LEFT_2_PORT = 2;
+static constexpr int8_t LEFT_3_PORT = -3;
+static constexpr int8_t LEFT_4_PORT = 4;
 
-static constexpr int8_t RIGHT_4_PORT = 7;
-static constexpr int8_t RIGHT_3_PORT = -8;
-static constexpr int8_t RIGHT_2_PORT = 9;
-static constexpr int8_t RIGHT_1_PORT = -10;
+static constexpr int8_t RIGHT_4_PORT = -7;
+static constexpr int8_t RIGHT_3_PORT = 8;
+static constexpr int8_t RIGHT_2_PORT = -9;
+static constexpr int8_t RIGHT_1_PORT = 10;
 
 static constexpr int8_t INTAKE_PORT = 12;
 static constexpr int8_t CONVEYOR_PORT = 5;
 static constexpr int8_t CONVEYOR_2_PORT = 6;
 
-static constexpr int8_t MOGO_PNEUMATICS = 7;
+static constexpr int8_t MOGO_PNEUMATICS = 'g';
 
 static constexpr int8_t ARM_ONE = 14;
 static constexpr int8_t ARM_TWO = 15;
@@ -40,6 +40,10 @@ pros::Motor rightMotor1{RIGHT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::
 pros::Motor rightMotor2{RIGHT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
 pros::Motor rightMotor3{RIGHT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
 pros::Motor rightMotor4{RIGHT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+
+pros::Motor extension{in_out, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
+pros::Motor armleft{ARM_ONE, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
+pros::Motor armright{ARM_TWO, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
 
 std::vector<pros::Motor> leftDrive{{leftMotor1, leftMotor2, leftMotor3, leftMotor4}};
 std::vector<pros::Motor> rightDrive{{rightMotor1, rightMotor2, rightMotor3, rightMotor4}};
@@ -124,24 +128,36 @@ void competition_initialize() {
 
 void autonomous() {}
 
-void opcontrol() {
-  while (true) {
-    turn = convertToVelocity(gp1.get_analog(ANALOG_LEFT_Y)) / 2;
-    power = convertToVelocity(gp1.get_analog(ANALOG_RIGHT_X)) / 2;
 
-    leftPower = (power + turn) * -1;
-    rightPower = (power - turn) * -1;
+ enum arm_position{
+    loading,
+    storing,
+    holding
+   };
+void opcontrol() {
+  bool arm_moving(false);
+  bool arm_moving_one(false);
+  double arm_start_time, arm_current_time;
+  enum arm_position arm_pause=loading;
+  int currentExtension;
+  while (true) {
+    currentExtension = extension.get_position();
+    turn = (gp1.get_analog(ANALOG_LEFT_Y));
+    power = (gp1.get_analog(ANALOG_RIGHT_X));
+
+    leftPower = (power - turn) * -1;
+    rightPower = (power + turn) * -1;
 
     drive.drive(leftPower, rightPower);
 
     // leftDrive.move_velocity((power + (turn)) * -1);
     // rightDrive.move_velocity((power - (turn)) *  -1);
 
-    if (gp1.get_digital(DIGITAL_A)) {
+    if (gp1.get_digital(DIGITAL_R1)) {
       intake.move_velocity(INTAKE_VELOCITY);
       conveyor.move_velocity(CONVEYOR_VELOCITY);
       // autoChucker(CONVEYOR_VELOCITY);
-    } else if (gp1.get_digital(DIGITAL_B)) {
+    } else if (gp1.get_digital(DIGITAL_R2)) {
       intake.move_velocity(-INTAKE_VELOCITY);
       conveyor.move_velocity(-CONVEYOR_VELOCITY);
       // autoChucker(-CONVEYOR_VELOCITY);
@@ -150,7 +166,7 @@ void opcontrol() {
       conveyor.move_velocity(0);
     }
 
-    if (gp1.get_digital_new_press(DIGITAL_R1)) {
+    if (gp1.get_digital_new_press(DIGITAL_B)) {
       if (mogoGrabbed) {
         mogoPiston.set_value(false);
         mogoGrabbed = false;
@@ -160,10 +176,51 @@ void opcontrol() {
       }
     }
 
-    pros::lcd::set_text(1, std::to_string(detectColor(colorSensor.get_hue())));
-    pros::lcd::set_text(2, std::to_string(timer));
-    pros::lcd::set_text(3, std::to_string(chuckRing));
-    pros::lcd::set_text(4, std::to_string(colorSensor.get_hue()));
+    // if (gp1.get_digital(DIGITAL_L1)&&currentExtension>-820) {
+    //   extension.move_velocity(-200);
+    // } else if (gp1.get_digital((DIGITAL_L2))&&currentExtension<0) {
+    //   extension.move_velocity(200);
+    // } else {
+    //   extension.move_velocity(0);
+    // }
+    // if (gp1.get_digital(DIGITAL_RIGHT)) {
+    //   extension.move_absolute(-820, -100);
+    // } else if (gp1.get_digital_new_press(DIGITAL_DOWN)) {
+    //   extension.move_absolute(0, 100);
+    // }
+
+    if (gp1.get_digital(DIGITAL_L1)) {
+      armleft.move_absolute(-200, 90);
+      armright.move_absolute(200, -90);
+      
+      extension.move_absolute(-820, -100);
+    } else if (gp1.get_digital_new_press(DIGITAL_L1)) {
+      armleft.move_absolute(0, 75);
+      armright.move_absolute(0, -75);
+      extension.move_absolute(0, 100);
+    }
+
+    if (gp1.get_digital_new_press(DIGITAL_L1)) {
+      arm_moving=true;
+      if (arm_pause==loading){
+        arm_pause=holding;
+        else if arm_pause=
+      }
+    }
+    if (arm_moving=true) {
+      if (arm_moving_one=false) {
+        arm_moving_one=true;
+       
+
+        }
+      }
+    }
+
+
+    pros::lcd::set_text(0, std::to_string(extension.get_position()));
+    pros::lcd::set_text(1, std::to_string(armleft.get_position()));
+    pros::lcd::set_text(2, std::to_string(armright.get_position()));
     pros::delay(2);
+  
   }
 }
