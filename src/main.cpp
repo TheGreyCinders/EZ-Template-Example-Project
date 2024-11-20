@@ -30,11 +30,11 @@ static constexpr int8_t ALLIANCE = 1;
 static constexpr int8_t OPP_ALLIANCE = 2;
 
 static constexpr double ARM_DOWN = 0;
-static constexpr double ARM_UP = 225;
+static constexpr double ARM_UP = 200;
 static constexpr double ARM_ROTATE_SPEED = 85;
 
 static constexpr double EXT_IN = 0;
-static constexpr double EXT_STORE = 70;
+static constexpr double EXT_STORE = 82.5;
 static constexpr double EXT_OUT = 280;
 static constexpr double EXT_SPEED = 600;
 // red 1
