@@ -82,6 +82,14 @@ pros::Controller gp1(CONTROLLER_MASTER);
 
 bool mogoGrabbed = false;
 
+enum DriverProfile{
+  JACKSON,
+  ETHAN,
+  ASHER
+};
+
+enum DriverProfile controllingPerson;
+
 // custom methods
 double convertToVelocity(double joystick) {
   return (joystick * DRIVE_VELOCITY) / 127;
@@ -132,6 +140,7 @@ void initialize() {
   }
   extension.set_brake_mode(MOTOR_BRAKE_HOLD);
   conveyor.set_reversed(true, 0);
+   controllingPerson=JACKSON;
 }
 
 void disable() {}
@@ -150,6 +159,7 @@ enum ArmPosition{
 };
 
 void opcontrol() {
+  bool change_driver=false;
   bool arm_moving = false;
   bool rotation_moving = false;
   bool extension_move = false;
@@ -158,15 +168,37 @@ void opcontrol() {
   enum ArmPosition pastArmPos=holding;
   int currentExtension;
   while (true) {
+    if (gp1.get_digital(DIGITAL_LEFT)&&gp1.get_digital(DIGITAL_UP)&&gp1.get_digital(DIGITAL_X)&&gp1.get_digital(DIGITAL_A)&&change_driver==false){
+      if (controllingPerson==JACKSON){
+          controllingPerson=ETHAN;
+      } 
+      if (controllingPerson==ETHAN){
+          controllingPerson=ASHER;
+      } 
+      if (controllingPerson==ASHER){
+          controllingPerson=JACKSON;
+      } 
+      change_driver=true;
+    }
+    if (!gp1.get_digital(DIGITAL_LEFT)&&!gp1.get_digital(DIGITAL_UP)&&!gp1.get_digital(DIGITAL_X)&&!gp1.get_digital(DIGITAL_A)){
+      change_driver=false;
+    }
     currentExtension = extension.get_position();
-    turn = (gp1.get_analog(ANALOG_LEFT_Y));
-    power = (gp1.get_analog(ANALOG_RIGHT_X));
+    if (controllingPerson==ETHAN||controllingPerson==ASHER)  {
+      turn = (gp1.get_analog(ANALOG_LEFT_Y));
+      power = (gp1.get_analog(ANALOG_RIGHT_X));
 
-    leftPower = (power - turn) * -1;
-    rightPower = (power + turn) * -1;
+      leftPower = (power - turn) * -1;
+      rightPower = (power + turn) * -1;
 
-    drive.drive(leftPower, rightPower);
-
+      drive.drive(leftPower, rightPower);
+    }
+    else if (controllingPerson==JACKSON){
+      leftPower=gp1.get_analog(ANALOG_LEFT_Y) * -1;
+      rightPower=gp1.get_analog(ANALOG_RIGHT_Y) * -1;
+      
+      drive.drive(leftPower, rightPower);
+    }
     if (gp1.get_digital(DIGITAL_R1)) {
       intake.move_velocity(INTAKE_VELOCITY);
       conveyor.move_velocity(CONVEYOR_VELOCITY);
