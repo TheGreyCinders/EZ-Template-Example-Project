@@ -61,6 +61,9 @@ std::vector<pros::Motor> armRotation{{armleft, armright}};
 
 // Definitions
 plattipi::robot::subsystems::DriveTrain drive{leftDrive, rightDrive};
+plattipi::robot::subsystems::Arm arm{armleft, armright, extension};
+
+// plattipi::robot::Robot robot{drive};
 
 pros::MotorGroup conveyor{
     {CONVEYOR_PORT, CONVEYOR_2_PORT},
@@ -140,7 +143,7 @@ void initialize() {
   }
   extension.set_brake_mode(MOTOR_BRAKE_HOLD);
   conveyor.set_reversed(true, 0);
-   controllingPerson=JACKSON;
+  controllingPerson=JACKSON;
 }
 
 void disable() {}
@@ -160,13 +163,6 @@ enum ArmPosition{
 
 void opcontrol() {
   bool change_driver=false;
-  bool arm_moving = false;
-  bool rotation_moving = false;
-  bool extension_move = false;
-  double arm_start_time, arm_current_time;
-  enum ArmPosition armPos=loading;
-  enum ArmPosition pastArmPos=holding;
-  int currentExtension;
   while (true) {
     if (gp1.get_digital(DIGITAL_LEFT)==1&&gp1.get_digital(DIGITAL_UP)==1&&gp1.get_digital(DIGITAL_X)==1&&gp1.get_digital(DIGITAL_A)==1){
       if (change_driver==false) {
@@ -182,7 +178,6 @@ void opcontrol() {
     } else {
       change_driver = false;
     }
-    currentExtension = extension.get_position();
     if (controllingPerson==ETHAN||controllingPerson==ASHER)  {
       turn = (gp1.get_analog(ANALOG_LEFT_Y));
       power = (gp1.get_analog(ANALOG_RIGHT_X));
@@ -201,11 +196,9 @@ void opcontrol() {
     if (gp1.get_digital(DIGITAL_R1)) {
       intake.move_velocity(INTAKE_VELOCITY);
       conveyor.move_velocity(CONVEYOR_VELOCITY);
-      // autoChucker(CONVEYOR_VELOCITY);
     } else if (gp1.get_digital(DIGITAL_R2)) {
       intake.move_velocity(-INTAKE_VELOCITY);
       conveyor.move_velocity(-CONVEYOR_VELOCITY);
-      // autoChucker(-CONVEYOR_VELOCITY);
     } else {
       intake.move_velocity(0);
       conveyor.move_velocity(0);
@@ -221,138 +214,16 @@ void opcontrol() {
       }
     }
 
-    // if (gp1.get_digital(DIGITAL_L1)&&currentExtension>-820) {
-    //   extension.move_velocity(-200);
-    // } else if (gp1.get_digital((DIGITAL_L2))&&currentExtension<0) {
-    //   extension.move_velocity(200);
-    // } else {
-    //   extension.move_velocity(0);
-    // }
-    // if (gp1.get_digital(DIGITAL_RIGHT)) {
-    //   extension.move_absolute(-820, -100);
-    // } else if (gp1.get_digital_new_press(DIGITAL_DOWN)) {
-    //   extension.move_absolute(0, 100);
-    // }
-
-//manual control
-    // if (gp1.get_digital(DIGITAL_L1)) {
-    //   for (auto motor : armRotation) {
-    //     motor.move_absolute(ARM_UP, ARM_ROTATE_SPEED);
-    //   }      
-    //   extension.move_absolute(-820, -100);
-    // } else if (gp1.get_digital_new_press(DIGITAL_L1)) {
-    //   for (auto motor : armRotation) {
-    //     motor.move_absolute(ARM_DOWN, -ARM_ROTATE_SPEED*0.75);
-    //   }     
-    //   extension.move_absolute(0, 100);
-    // }
-
 //macros
     if (gp1.get_digital_new_press(DIGITAL_L1)) {
-      arm_moving=true;
-      rotation_moving = true;
-      extension_move = true;
-      pastArmPos = armPos;
-      if (armPos==loading){
-        armPos=holding;
-      }
-      else if (armPos==holding || armPos==storing) {
-        armPos = loading;
-      }
+      arm.toggleOut();
     }
 
     if (gp1.get_digital_new_press(DIGITAL_L2)) {
-      arm_moving = true;
-      rotation_moving = true;
-      extension_move = true;
-      pastArmPos = armPos;
-      if (armPos==loading) {
-        armPos = storing;
-      } else if (armPos==holding || armPos==storing) {
-        armPos=loading;
-      }
+      arm.toggleIn();
     }
-    
-    if (arm_moving=true) {
 
-      //holding macros
-      if (armPos == holding) {
-        //loading-holding macro
-        if (pastArmPos == loading) {
-          if (rotation_moving == true) {
-            for (auto motor : armRotation) {
-              motor.move_absolute(ARM_UP, -ARM_ROTATE_SPEED);
-            }
-            rotation_moving = false;
-          }
-          if (extension_move == true && armRotation[0].get_position() > 125) {
-            extension.move_absolute(EXT_OUT, -EXT_SPEED);
-            extension_move = false;
-          }
-        }
-        //storing-holding macro
-        if (pastArmPos == holding) {
-          //case is impossible
-        }
-      } 
-
-      //loading macros
-      else if (armPos == loading) {
-        //holding-loading macro
-        if (pastArmPos == holding) {
-          if (extension_move == true) {
-            extension.move_absolute(EXT_IN, EXT_SPEED);
-            extension_move = false;
-          }
-          if (rotation_moving == true && extension.get_position() < 200) {
-            for (auto motor : armRotation) {
-              motor.move_absolute(ARM_DOWN, ARM_ROTATE_SPEED);
-            }
-            rotation_moving = false;
-          }
-        }
-        //storing-loading macro
-        if (pastArmPos == storing) {
-          if (extension_move == true) {
-            extension.move_absolute(EXT_IN, EXT_SPEED);
-            extension_move = false;
-          }
-          rotation_moving = true;
-        }
-      }
-
-      else if (armPos == storing) {
-        //storing-holding macro
-        if (pastArmPos == holding) {
-          if (extension_move == true) {
-            extension.move_absolute(EXT_STORE, EXT_SPEED);
-            extension_move = false;
-          }
-          if (rotation_moving == true && extension.get_position() < 200) {
-            for (auto motor : armRotation) {
-              motor.move_absolute(ARM_DOWN, ARM_ROTATE_SPEED);
-            }
-            rotation_moving = false;
-          }
-        }
-        //loading-storing macro
-        if (pastArmPos == loading) {
-          if (extension_move == true) {
-            extension.move_absolute(EXT_STORE, EXT_SPEED);
-            extension_move = false;
-          }
-          rotation_moving = true;
-        }
-      }
-
-      //exit sequence
-      if (!extension_move && !rotation_moving) {
-        arm_moving = false;
-      }
-    }
-    
-
-
+    arm.periodic();
     // pros::lcd::set_text(0, std::to_string(extension.get_position()));
     // pros::lcd::set_text(1, std::to_string(armleft.get_position()));
     // pros::lcd::set_text(2, std::to_string(armright.get_position()));

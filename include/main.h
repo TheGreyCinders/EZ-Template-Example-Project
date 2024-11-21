@@ -49,6 +49,7 @@
 #include "subsystems.hpp"
 #include "Plattipi/robot/robot.hpp"
 #include "Plattipi/robot/subsystems/drivetrain.hpp"
+#include "Plattipi/robot/subsystems/arm.hpp"
 
 
 /**
