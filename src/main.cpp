@@ -30,7 +30,7 @@ static constexpr int8_t ALLIANCE = 1;
 static constexpr int8_t OPP_ALLIANCE = 2;
 
 static constexpr double ARM_DOWN = 0;
-static constexpr double ARM_UP = 200;
+static constexpr double ARM_UP = 210;
 static constexpr double ARM_ROTATE_SPEED = 85;
 
 static constexpr double EXT_IN = 0;
@@ -168,20 +168,19 @@ void opcontrol() {
   enum ArmPosition pastArmPos=holding;
   int currentExtension;
   while (true) {
-    if (gp1.get_digital(DIGITAL_LEFT)&&gp1.get_digital(DIGITAL_UP)&&gp1.get_digital(DIGITAL_X)&&gp1.get_digital(DIGITAL_A)&&change_driver==false){
-      if (controllingPerson==JACKSON){
+    if (gp1.get_digital(DIGITAL_LEFT)==1&&gp1.get_digital(DIGITAL_UP)==1&&gp1.get_digital(DIGITAL_X)==1&&gp1.get_digital(DIGITAL_A)==1){
+      if (change_driver==false) {
+        if (controllingPerson==JACKSON){
           controllingPerson=ETHAN;
-      } 
-      if (controllingPerson==ETHAN){
+        } else if (controllingPerson==ETHAN){
           controllingPerson=ASHER;
-      } 
-      if (controllingPerson==ASHER){
+        } else if (controllingPerson==ASHER){
           controllingPerson=JACKSON;
-      } 
-      change_driver=true;
-    }
-    if (!gp1.get_digital(DIGITAL_LEFT)&&!gp1.get_digital(DIGITAL_UP)&&!gp1.get_digital(DIGITAL_X)&&!gp1.get_digital(DIGITAL_A)){
-      change_driver=false;
+        }
+        change_driver = true; 
+      }
+    } else {
+      change_driver = false;
     }
     currentExtension = extension.get_position();
     if (controllingPerson==ETHAN||controllingPerson==ASHER)  {
@@ -194,8 +193,8 @@ void opcontrol() {
       drive.drive(leftPower, rightPower);
     }
     else if (controllingPerson==JACKSON){
-      leftPower=gp1.get_analog(ANALOG_LEFT_Y) * -1;
-      rightPower=gp1.get_analog(ANALOG_RIGHT_Y) * -1;
+      leftPower=gp1.get_analog(ANALOG_RIGHT_Y) * 1;
+      rightPower=gp1.get_analog(ANALOG_LEFT_Y) * -1;
       
       drive.drive(leftPower, rightPower);
     }
@@ -354,10 +353,12 @@ void opcontrol() {
     
 
 
-    pros::lcd::set_text(0, std::to_string(extension.get_position()));
-    pros::lcd::set_text(1, std::to_string(armleft.get_position()));
-    pros::lcd::set_text(2, std::to_string(armright.get_position()));
-    pros::lcd::set_text(3, std::to_string(armPos));
+    // pros::lcd::set_text(0, std::to_string(extension.get_position()));
+    // pros::lcd::set_text(1, std::to_string(armleft.get_position()));
+    // pros::lcd::set_text(2, std::to_string(armright.get_position()));
+    // pros::lcd::set_text(3, std::to_string(armPos));
+    pros::lcd::set_text(0, std::to_string(controllingPerson));
+    pros::lcd::set_text(1, std::to_string(change_driver));
     pros::delay(10);
   
   }
