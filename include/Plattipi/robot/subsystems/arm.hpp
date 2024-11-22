@@ -17,9 +17,9 @@ namespace subsystems {
         static constexpr double ARM_ROTATE_SPEED{85};
 
         static constexpr double EXT_IN{0};
-        static constexpr double EXT_STORE{82.5};
-        static constexpr double EXT_OUT{285};
-        static constexpr double EXT_SPEED{600};
+        static constexpr double EXT_STORE{275};
+        static constexpr double EXT_OUT{855};
+        static constexpr double EXT_SPEED{200};
 
         enum class ArmStates {
             HOLDING,
