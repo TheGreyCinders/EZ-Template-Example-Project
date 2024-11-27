@@ -14,7 +14,9 @@ class DriveTrain {
   DriveTrain();
   DriveTrain(std::vector<pros::Motor>& left_motors, std::vector<pros::Motor>& right_motors);
 
-  void drive (double left_power, double right_power);
+  void drive(double left_power, double right_power);
+  void driveTank(double left_power, double right_power);
+  void driveSplitArcade(double forward_power, double turn_power);
   void initialize();
 
 

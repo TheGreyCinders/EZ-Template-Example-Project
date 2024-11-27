@@ -13,12 +13,12 @@ namespace subsystems {
         bool armMoving, rotationMoving, extensionMoving;
 
         static constexpr double ARM_DOWN{0};
-        static constexpr double ARM_UP{210};
+        static constexpr double ARM_UP{220};
         static constexpr double ARM_ROTATE_SPEED{85};
 
-        static constexpr double EXT_IN{0};
-        static constexpr double EXT_STORE{275};
-        static constexpr double EXT_OUT{855};
+        static constexpr double EXT_IN{-5};
+        static constexpr double EXT_STORE{180};
+        static constexpr double EXT_OUT{570};
         static constexpr double EXT_SPEED{200};
 
         enum class ArmStates {
@@ -35,6 +35,7 @@ namespace subsystems {
         Arm();
         Arm(pros::Motor armLeft, pros::Motor armRight, pros::Motor extension);
 
+        void initialize();
         void goLoad();
         void goStore();
         void goHold();

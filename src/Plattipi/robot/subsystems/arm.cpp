@@ -5,6 +5,12 @@ namespace robot {
 namespace subsystems {
     Arm::Arm(pros::Motor armLeft, pros::Motor armRight, pros::Motor extension) : m_armLeft{armLeft}, m_armRight{armRight}, m_extension{extension} {}
     
+    void Arm::initialize() {
+        m_armLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        m_armRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        m_extension.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+
     void Arm::goLoad() {
         state = ArmStates::LOADING;
     }
