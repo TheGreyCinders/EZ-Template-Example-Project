@@ -6,7 +6,7 @@ namespace robot {
 namespace subsystems {
     class MogoMech {
         private:
-            bool mogoGrabbed{false};
+            bool mogoGrabbed{true};
             pros::adi::DigitalOut m_piston;
         
         public:

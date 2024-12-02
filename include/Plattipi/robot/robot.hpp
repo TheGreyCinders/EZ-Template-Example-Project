@@ -6,6 +6,7 @@
 #include "plattipi/robot/subsystems/Arm.hpp"
 #include "plattipi/robot/subsystems/MogoMech.hpp"
 #include "Plattipi/robot/subsystems/Conveyor.hpp"
+
 namespace plattipi {
 namespace robot {
 class Robot {
@@ -18,15 +19,24 @@ class Robot {
 
  public:
   Robot(
-    subsystems::DriveTrain& drive_train, 
     subsystems::Intake& intake,
     subsystems::Conveyor& conveyor,
     subsystems::Arm& arm,
     subsystems::MogoMech& mogo_mech
-    );
+  );
+  // Robot(
+  //   subsystems::DriveTrain& drive_train, 
+  //   subsystems::Intake& intake,
+  //   subsystems::Conveyor& conveyor,
+  //   subsystems::Arm& arm,
+  //   subsystems::MogoMech& mogo_mech,
+  //   configs::OrangeConfiguration& config
+  // );
+  // configs::BlueConfiguration blueConfig{};
 
   //general methods
   void initialize();
+  void autonomous();
   void periodic();
 
 

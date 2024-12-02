@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pros/motor_group.hpp"
+#include "pros/motors.hpp"
 namespace plattipi {
 namespace robot {
 namespace subsystems {

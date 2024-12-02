@@ -1,49 +1,55 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 
-static constexpr int8_t LEFT_1_PORT = -1;
-static constexpr int8_t LEFT_2_PORT = 2;
-static constexpr int8_t LEFT_3_PORT = -3;
-static constexpr int8_t LEFT_4_PORT = 4;
+static constexpr signed char LEFT_1_PORT = -1;
+static constexpr signed char LEFT_2_PORT = 2;
+static constexpr signed char LEFT_3_PORT = -3;
+static constexpr signed char LEFT_4_PORT = 4;
 
-static constexpr int8_t RIGHT_4_PORT = -7;
-static constexpr int8_t RIGHT_3_PORT = 8;
-static constexpr int8_t RIGHT_2_PORT = -9;
-static constexpr int8_t RIGHT_1_PORT = 10;
+static constexpr signed char RIGHT_4_PORT = -7;
+static constexpr signed char RIGHT_3_PORT = 8;
+static constexpr signed char RIGHT_2_PORT = -9;
+static constexpr signed char RIGHT_1_PORT = 10;
 
-static constexpr int8_t INTAKE_PORT = -12;
-static constexpr int8_t CONVEYOR_PORT = -5;
-static constexpr int8_t CONVEYOR_2_PORT = 6;
+static constexpr signed char INTAKE_PORT = -12;
+static constexpr signed char CONVEYOR_PORT = -5;
+static constexpr signed char CONVEYOR_2_PORT = 6;
 
 static constexpr int8_t MOGO_PNEUMATICS = 'g';
 
-static constexpr int8_t ARM_ONE = -14;
-static constexpr int8_t ARM_TWO = 15;
-static constexpr int8_t EXTENSION = -16;
+static constexpr signed char ARM_ONE = -14;
+static constexpr signed char ARM_TWO = 15;
+static constexpr signed char EXTENSION = -16;
 
-static constexpr int8_t COLOR_SENSOR_PORT = 11;
+static constexpr signed char COLOR_SENSOR_PORT = 11;
 
 static constexpr int8_t ALLIANCE = 1;
 static constexpr int8_t OPP_ALLIANCE = 2;
 // red 1
 // blue 2
 
-pros::Motor leftMotor1{LEFT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-pros::Motor leftMotor2{LEFT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-pros::Motor leftMotor3{LEFT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-pros::Motor leftMotor4{LEFT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+// pros::Motor leftMotor1{LEFT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+// pros::Motor leftMotor2{LEFT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+// pros::Motor leftMotor3{LEFT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+// pros::Motor leftMotor4{LEFT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
 
-pros::Motor rightMotor1{RIGHT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-pros::Motor rightMotor2{RIGHT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-pros::Motor rightMotor3{RIGHT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-pros::Motor rightMotor4{RIGHT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+// pros::Motor rightMotor1{RIGHT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+// pros::Motor rightMotor2{RIGHT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+// pros::Motor rightMotor3{RIGHT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+// pros::Motor rightMotor4{RIGHT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
+
+// std::vector<pros::Motor> leftDrive{{leftMotor1, leftMotor2, leftMotor3, leftMotor4}};
+// std::vector<pros::Motor> rightDrive{{rightMotor1, rightMotor2, rightMotor3, rightMotor4}};
+
+// pros::MotorGroup leftDrive({LEFT_1_PORT, LEFT_2_PORT, LEFT_3_PORT, LEFT_4_PORT}, pros::v5::MotorGears::blue, pros::v5::MotorEncoderUnits::deg);
+// pros::MotorGroup rightDrive({RIGHT_1_PORT, RIGHT_2_PORT, RIGHT_3_PORT, RIGHT_4_PORT}, pros::v5::MotorGears::blue, pros::v5::MotorEncoderUnits::deg);
+
+// std::vector<signed char> leftDrivePorts({LEFT_1_PORT, LEFT_2_PORT, LEFT_3_PORT, LEFT_4_PORT});
+// std::vector<signed char> rightDrivePorts({RIGHT_1_PORT, RIGHT_2_PORT, RIGHT_3_PORT, RIGHT_4_PORT});
 
 pros::Motor extension{EXTENSION, pros::v5::MotorCartridge::green, pros::v5::MotorUnits::degrees};
 pros::Motor armleft{ARM_ONE, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
 pros::Motor armright{ARM_TWO, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
-
-std::vector<pros::Motor> leftDrive{{leftMotor1, leftMotor2, leftMotor3, leftMotor4}};
-std::vector<pros::Motor> rightDrive{{rightMotor1, rightMotor2, rightMotor3, rightMotor4}};
 
 std::vector<pros::Motor> armRotation{{armleft, armright}};
 
@@ -60,13 +66,13 @@ pros::adi::DigitalOut mogoPiston(MOGO_PNEUMATICS);
 pros::Controller gp1(CONTROLLER_MASTER);
 
 // Definitions
-plattipi::robot::subsystems::DriveTrain drive{leftDrive, rightDrive};
+plattipi::robot::subsystems::DriveTrain drive{};
 plattipi::robot::subsystems::Intake intake{intakeMotor};
 plattipi::robot::subsystems::Conveyor conveyor{conveyorMotors};
 plattipi::robot::subsystems::Arm arm{armleft, armright, extension};
 plattipi::robot::subsystems::MogoMech mogo{mogoPiston};
 
-plattipi::robot::Robot robot{drive, intake, conveyor, arm, mogo};
+plattipi::robot::Robot robot{intake, conveyor, arm, mogo};
 
 enum DriverProfile{
   JACKSON,
@@ -122,7 +128,9 @@ void competition_initialize() {
   pros::lcd::initialize();
 }
 
-void autonomous() {}
+void autonomous() {
+  robot.autonomous();
+}
 
 void opcontrol() {
   bool change_driver=false;
@@ -148,7 +156,7 @@ void opcontrol() {
       robot.driveSplitArcade(gp1.get_analog(ANALOG_RIGHT_X), gp1.get_analog(ANALOG_LEFT_Y));
     }
     else if (controllingPerson==JACKSON){
-      robot.driveTank(gp1.get_analog(ANALOG_RIGHT_Y), -gp1.get_analog(ANALOG_LEFT_Y));
+      robot.driveTank(gp1.get_analog(ANALOG_LEFT_Y), gp1.get_analog(ANALOG_RIGHT_Y));
     }
 
     //intake controls
@@ -177,10 +185,10 @@ void opcontrol() {
       robot.armToggleIn();
     }
 
-    robot.periodic();
-    pros::lcd::set_text(0, std::to_string(controllingPerson));
-    pros::lcd::set_text(1, std::to_string(change_driver));
-    pros::delay(10);
-  
+    if (gp1.get_digital_new_press(DIGITAL_DOWN)) {
+      autonomous();
+    }
+
+    robot.periodic();  
   }
 }
