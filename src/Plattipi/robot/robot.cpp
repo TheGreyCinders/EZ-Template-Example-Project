@@ -2,6 +2,7 @@
 #include "liblvgl/llemu.hpp"
 #include "pros/llemu.hpp"
 #include "Plattipi/utils.hpp"  // IWYU pragma: keep
+#include "pros/rtos.hpp"
 
 ASSET(firstpath_txt);
 ASSET(mogotoringstack_txt);
@@ -12,10 +13,19 @@ namespace plattipi {
 namespace robot {
   Robot::Robot(subsystems::Intake& intake, subsystems::Conveyor& conveyor, subsystems::Arm& arm, subsystems::MogoMech& mogo_mech) : 
   m_intake{intake}, 
-  m_conveyor{conveyor}, 
+  m_conveyor{conveyor},
   m_arm{arm}, 
   m_mogo_mech{mogo_mech}
   {}
+
+  void Robot::intakeStart() {
+    while (m_drive_train.llChassis.isInMotion()) {
+      if (m_drive_train.llChassis.isInMotion()) {
+        intakeIntake();
+      }
+      pros::delay(200);
+    }
+  }
   
   //general methods
   void Robot::initialize() {
@@ -28,8 +38,14 @@ namespace robot {
     m_arm.initialize();
     //mogo mech
 
-
+     pros::Task test {[=] (void) {
+        intakeStart();
+     }};
   }
+
+
+
+
 
   void Robot::autonomous() {
 
@@ -40,57 +56,74 @@ namespace robot {
     m_mogo_mech.toggleGrabbed();
     pros::delay(100);
 
-    // //ring stacks
-    // intakeIntake();
-    // conveyorIntake();
-    // periodic();
-    // m_drive_train.llChassis.follow(mogotoringstack_txt, 12, 5000, true, false);
-    // pros::delay(1500);
+    //ring stacks
+    intakeIntake();
+    conveyorIntake();
+    periodic();
+    m_drive_train.llChassis.follow(mogotoringstack_txt, 12, 5000, true, false);
+    pros::delay(1500);
 
-    // //drop mogo
-    // m_drive_train.llChassis.turnToHeading(135, 2, {.maxSpeed = 120}, false);
-    // m_mogo_mech.toggleGrabbed();
-    // pros::delay(100);
+    //drop mogo
+    m_drive_train.llChassis.turnToHeading(135, 2, {.maxSpeed = 120}, false);
+    m_mogo_mech.toggleGrabbed();
+    pros::delay(100);
 
-    // //alliance ring stack
-    // m_drive_train.llChassis.follow(ringstacktobackup_txt, 10, 5000, true, false);
-    // pros::delay(50);
-    // intakeStop();
-    // conveyorStop();
-    // periodic();
+    //alliance ring stack
+    m_drive_train.llChassis.follow(ringstacktobackup_txt, 10, 5000, true, false);
+    pros::delay(50);
+    intakeStop();
+    conveyorStop();
+    periodic();
 
-    // m_drive_train.llChassis.turnToHeading(90, 1000, {.maxSpeed = 120}, false);
-    // m_drive_train.llChassis.moveToPoint(-61, 2.5, 1000, {.maxSpeed = 120}, false);
-    // pros::delay(1000);
-    // intakeIntake();
-    // conveyorIntake();
-    // periodic();
-    // pros::delay(3000);
+    m_drive_train.llChassis.turnToHeading(90, 1000, {.maxSpeed = 120}, false);
+    m_drive_train.llChassis.moveToPoint(-61, 2.5, 1000, {.maxSpeed = 120}, false);
+    pros::delay(1000);
+    intakeIntake();
+    conveyorIntake();
+    periodic();
+    pros::delay(3000);
   }
 
   bool mogoGrabbed = false;
 
   void Robot::periodic() {
-
     //drive
     m_intake.periodic();
     m_conveyor.periodic();
     m_arm.periodic();
     //mogo mech
 
+    if (sortingControl) {
+      colorEjection();
+    }
 
-    // if (!mogoGrabbed && pointWithinRange(m_drive_train.llChassis.getPose().x, m_drive_train.llChassis.getPose().y, 0, 47, 12.5)) {
-    //   m_mogo_mech.toggleGrabbed();
-    //   mogoGrabbed = true;
-    // }
-    
-
-    //prints
-    pros::lcd::print(0, "X: %f", m_drive_train.getPoseX());
-    pros::lcd::print(1, "Y: %f", m_drive_train.getPoseY());
-    pros::lcd::print(2, "Theta: %f", m_drive_train.getPoseTheta());
-    pros::lcd::print(4, "Speed: %f", m_drive_train.getDriveSpeed());
     pros::delay(10);
+  }
+
+  void Robot::colorEjection() {
+    detection = m_intake.getHue();
+    detectionColor = m_intake.getColor();
+
+    if (!detected) {
+      if (detectionColor == 1) {
+        detected = true;
+        detectTime = pros::millis();
+      } else {
+        m_intake.intakeIntake();
+        m_conveyor.intake();
+      }
+    } else {
+      pros::lcd::set_text(4, "yes");
+      if ((detectTime + END_TIME) < pros::millis()) {
+        detected = false;
+      } else if ((detectTime + CONTINUE_TIME) < pros::millis()) {
+        m_intake.intakeIntake();
+        m_conveyor.intake();
+      } else if ((detectTime + REVERSE_TIME) < pros::millis()) {
+        m_intake.intakeOuttake();
+        m_conveyor.outtake();
+      }
+    }
   }
 
 //drive methods
@@ -104,15 +137,24 @@ namespace robot {
 
 //intake methods
   void Robot::intakeIntake() {
-    m_intake.intake();
+    m_intake.intakeIntake();
+    // m_intake.conveyorIntake();
+  }
+
+  void Robot::intakeIntakeSort() {
+    sortingControl = true;
   }
 
   void Robot::intakeOuttake() {
-    m_intake.outtake();
+    m_intake.intakeOuttake();
+    sortingControl = false;
+    // m_intake.conveyorOuttake();
   }
 
   void Robot::intakeStop() {
-    m_intake.stop();
+    m_intake.intakeStop();
+    sortingControl = false;
+    // m_intake.conveyorStop();
   }
 
 //conveyor methods

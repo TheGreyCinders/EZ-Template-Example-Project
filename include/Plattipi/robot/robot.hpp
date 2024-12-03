@@ -17,6 +17,17 @@ class Robot {
   subsystems::Arm m_arm{};
   subsystems::MogoMech m_mogo_mech{};
 
+  bool sortingControl{false};
+  bool sorting{false};
+  bool detected{false};
+  double detectTime{0};
+  double detection{0};
+  int detectionColor{0};
+
+  static constexpr double REVERSE_TIME{115};
+  static constexpr double CONTINUE_TIME{200};
+  static constexpr double END_TIME{300};
+
  public:
   Robot(
     subsystems::Intake& intake,
@@ -39,6 +50,8 @@ class Robot {
   void autonomous();
   void periodic();
 
+  void colorEjection();
+
 
   //drive methods
   void driveSplitArcade(double forward_power, double turn_power);
@@ -46,6 +59,7 @@ class Robot {
 
   //intake methods
   void intakeIntake();
+  void intakeIntakeSort();
   void intakeOuttake();
   void intakeStop();
 
@@ -60,6 +74,9 @@ class Robot {
 
   //mogo methods
   void mogoToggle();
+
+  //auto methods
+  void intakeStart();
 
 };
 }  // namespace robot

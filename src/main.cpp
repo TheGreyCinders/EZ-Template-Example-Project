@@ -28,25 +28,6 @@ static constexpr int8_t OPP_ALLIANCE = 2;
 // red 1
 // blue 2
 
-// pros::Motor leftMotor1{LEFT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-// pros::Motor leftMotor2{LEFT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-// pros::Motor leftMotor3{LEFT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-// pros::Motor leftMotor4{LEFT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-
-// pros::Motor rightMotor1{RIGHT_1_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-// pros::Motor rightMotor2{RIGHT_2_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-// pros::Motor rightMotor3{RIGHT_3_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-// pros::Motor rightMotor4{RIGHT_4_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
-
-// std::vector<pros::Motor> leftDrive{{leftMotor1, leftMotor2, leftMotor3, leftMotor4}};
-// std::vector<pros::Motor> rightDrive{{rightMotor1, rightMotor2, rightMotor3, rightMotor4}};
-
-// pros::MotorGroup leftDrive({LEFT_1_PORT, LEFT_2_PORT, LEFT_3_PORT, LEFT_4_PORT}, pros::v5::MotorGears::blue, pros::v5::MotorEncoderUnits::deg);
-// pros::MotorGroup rightDrive({RIGHT_1_PORT, RIGHT_2_PORT, RIGHT_3_PORT, RIGHT_4_PORT}, pros::v5::MotorGears::blue, pros::v5::MotorEncoderUnits::deg);
-
-// std::vector<signed char> leftDrivePorts({LEFT_1_PORT, LEFT_2_PORT, LEFT_3_PORT, LEFT_4_PORT});
-// std::vector<signed char> rightDrivePorts({RIGHT_1_PORT, RIGHT_2_PORT, RIGHT_3_PORT, RIGHT_4_PORT});
-
 pros::Motor extension{EXTENSION, pros::v5::MotorCartridge::green, pros::v5::MotorUnits::degrees};
 pros::Motor armleft{ARM_ONE, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
 pros::Motor armright{ARM_TWO, pros::v5::MotorCartridge::red, pros::v5::MotorUnits::degrees};
@@ -61,13 +42,13 @@ pros::Motor intakeMotor{INTAKE_PORT, pros::v5::MotorCartridge::blue, pros::v5::M
 
 pros::adi::DigitalOut mogoPiston(MOGO_PNEUMATICS);
 
-// pros::Optical colorSensor(COLOR_SENSOR_PORT);
+pros::Optical colorSensor(COLOR_SENSOR_PORT);
 
 pros::Controller gp1(CONTROLLER_MASTER);
 
 // Definitions
 plattipi::robot::subsystems::DriveTrain drive{};
-plattipi::robot::subsystems::Intake intake{intakeMotor};
+plattipi::robot::subsystems::Intake intake{intakeMotor, colorSensor};
 plattipi::robot::subsystems::Conveyor conveyor{conveyorMotors};
 plattipi::robot::subsystems::Arm arm{armleft, armright, extension};
 plattipi::robot::subsystems::MogoMech mogo{mogoPiston};
@@ -161,7 +142,7 @@ void opcontrol() {
 
     //intake controls
     if (gp1.get_digital_new_press(DIGITAL_R1)) {
-      robot.intakeIntake();
+      robot.intakeIntakeSort();
       robot.conveyorIntake();
       pros::lcd::set_text(2, "test");
     } else if (gp1.get_digital_new_press(DIGITAL_R2)) {
