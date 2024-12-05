@@ -1,5 +1,6 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/adi.hpp"
 
 static constexpr signed char LEFT_1_PORT = -1;
 static constexpr signed char LEFT_2_PORT = 2;
@@ -16,6 +17,7 @@ static constexpr signed char CONVEYOR_PORT = -5;
 static constexpr signed char CONVEYOR_2_PORT = 6;
 
 static constexpr int8_t MOGO_PNEUMATICS = 'g';
+static constexpr int8_t COLOR_PNEUMATICS = 'a';
 
 static constexpr signed char ARM_ONE = -14;
 static constexpr signed char ARM_TWO = 15;
@@ -41,15 +43,19 @@ std::vector<pros::Motor> conveyorMotors{{conveyor1, conveyor2}};
 pros::Motor intakeMotor{INTAKE_PORT, pros::v5::MotorCartridge::blue, pros::v5::MotorUnits::degrees};
 
 pros::adi::DigitalOut mogoPiston(MOGO_PNEUMATICS);
+pros::adi::DigitalOut colorSortPiston(COLOR_PNEUMATICS);
 
 pros::Optical colorSensor(COLOR_SENSOR_PORT);
 
 pros::Controller gp1(CONTROLLER_MASTER);
 
+
+
 // Definitions
+//subsystems
 plattipi::robot::subsystems::DriveTrain drive{};
 plattipi::robot::subsystems::Intake intake{intakeMotor, colorSensor};
-plattipi::robot::subsystems::Conveyor conveyor{conveyorMotors};
+plattipi::robot::subsystems::Conveyor conveyor{conveyorMotors, colorSortPiston};
 plattipi::robot::subsystems::Arm arm{armleft, armright, extension};
 plattipi::robot::subsystems::MogoMech mogo{mogoPiston};
 
@@ -63,54 +69,37 @@ enum DriverProfile{
 
 enum DriverProfile controllingPerson;
 
-// custom methods
-// int detectColor(double hue) {
-//   if (hue < 10 || hue > 350) {
-//     return 1;
-//   } else if (hue > 190 && hue < 230) {
-//     return 2;
-//   } else {
-//     return 0;
-//   }
-// }
+enum Alliance{
+  NEUTRAL,
+  BLUE,
+  RED
+};
 
-// int ringColor;
-// bool chuckRing = false;
-// int timer = 0;
-
-// void autoChucker(int velocity) {
-//   ringColor = detectColor(colorSensor.get_hue());
-//   if (chuckRing == true) {
-//     timer++;
-//     if (timer > 90 && timer < 110) {
-//       // conveyor.move_velocity(0);
-//     } else if (timer > 110) {
-//       chuckRing = false;
-//       timer = 0;
-//     }
-//   } else {
-//     // conveyor.move_velocity(velocity);
-//     if (ringColor == OPP_ALLIANCE) {
-//       chuckRing = true;
-//     }
-//   }
-// }
+enum Alliance alliance;
 
 // robot methods
 void initialize() {
+  // alliance = Alliance::RED;
+  alliance = BLUE;
+
+  //rest
   pros::lcd::initialize();
-  robot.initialize();
+  robot.initialize(alliance);
   controllingPerson=JACKSON;
+}
+
+void autonomous() {
+  // robot.autoTest();
+  robot.autoBlueLeft();
+  // robot.autoBlueRight();
+  // robot.autoRedLeft();
+  // robot.autoRedRight();
 }
 
 void disable() {}
 
 void competition_initialize() {
-  pros::lcd::initialize();
-}
 
-void autonomous() {
-  robot.autonomous();
 }
 
 void opcontrol() {
@@ -134,7 +123,7 @@ void opcontrol() {
 
     //drive controls
     if (controllingPerson==ETHAN||controllingPerson==ASHER)  {
-      robot.driveSplitArcade(gp1.get_analog(ANALOG_RIGHT_X), gp1.get_analog(ANALOG_LEFT_Y));
+      robot.driveSplitArcade(gp1.get_analog(ANALOG_LEFT_Y), gp1.get_analog(ANALOG_RIGHT_X));
     }
     else if (controllingPerson==JACKSON){
       robot.driveTank(gp1.get_analog(ANALOG_LEFT_Y), gp1.get_analog(ANALOG_RIGHT_Y));
@@ -170,6 +159,7 @@ void opcontrol() {
       autonomous();
     }
 
-    robot.periodic();  
+    // robot.periodic();  
+    pros::delay(10);
   }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pros/motors.hpp"
+#include "pros/optical.h"
 #include "pros/optical.hpp"
 namespace plattipi {
 namespace robot {
@@ -15,7 +16,9 @@ namespace subsystems {
         double currentIntakeVelocity{0};
         // double currentConveyorVelocity{0};
         
-        double detection{0};
+        double detectionBlue{0};
+        double detectionRed{0};
+        pros::c::optical_rgb_s_t detections;
         int detectionColor{0};
 
         static constexpr double REVERSE_TIME{100};
@@ -36,8 +39,10 @@ namespace subsystems {
         void intakeSort();
 
         int detectColor(double hue);
+        int detectColorRGB(double red, double blue);
         int getColor();
-        double getHue();
+        double getBlue();
+        double getRed();
         
         void periodic();
 

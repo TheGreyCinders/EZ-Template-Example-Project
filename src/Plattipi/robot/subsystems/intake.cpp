@@ -7,6 +7,7 @@ namespace subsystems {
 
     void Intake::initialize() {
         m_intake_motor.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+        m_color_sensor.set_led_pwm(100);
     }
 
     //intake
@@ -54,12 +55,26 @@ namespace subsystems {
         }
     }
 
+    int Intake::detectColorRGB(double red, double blue) {
+        if (red > 1750) {
+            return 1;
+        } else if (blue > 1750) {
+            return 2;
+        } else {
+            return 0;
+        }
+    }
+
     int Intake::getColor() {
         return detectionColor;
     }
 
-    double Intake::getHue() {
-        return detection;
+    double Intake::getBlue() {
+        return detectionBlue;
+    }
+
+    double Intake::getRed() {
+        return detectionRed;
     }
 
     void Intake::periodic() {
@@ -96,8 +111,10 @@ namespace subsystems {
         //     }
         // }
 
-        detection = m_color_sensor.get_hue();
-        detectionColor = detectColor(detection);
+        detections = m_color_sensor.get_rgb();
+        detectionBlue = detections.blue;
+        detectionRed = detections.red;
+        detectionColor = detectColorRGB(detectionRed, detectionBlue);
         m_intake_motor.move_velocity(currentIntakeVelocity);
     }
 

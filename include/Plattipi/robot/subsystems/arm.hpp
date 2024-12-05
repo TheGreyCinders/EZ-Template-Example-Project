@@ -17,7 +17,7 @@ namespace subsystems {
         static constexpr double ARM_ROTATE_SPEED{85};
 
         static constexpr double EXT_IN{-5};
-        static constexpr double EXT_STORE{200};
+        static constexpr double EXT_STORE{210};
         static constexpr double EXT_OUT{680};
         static constexpr double EXT_SPEED{200};
 

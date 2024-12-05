@@ -23,10 +23,13 @@ class Robot {
   double detectTime{0};
   double detection{0};
   int detectionColor{0};
+  bool colorSortingToggle{true};
+
+  int m_alliance{0};
 
   static constexpr double REVERSE_TIME{115};
   static constexpr double CONTINUE_TIME{200};
-  static constexpr double END_TIME{300};
+  static constexpr double END_TIME{400};
 
  public:
   Robot(
@@ -46,11 +49,19 @@ class Robot {
   // configs::BlueConfiguration blueConfig{};
 
   //general methods
-  void initialize();
-  void autonomous();
+  void initialize(int alliance);
+  void colorSortAuto();
+  void autoTest();
+  void autoBlueLeft();
+  void autoBlueRight();
+  void autoRedLeft();
+  void autoRedRight();
   void periodic();
 
   void colorEjection();
+  void colorEjectionTest();
+
+  void toggleColorSorting();
 
 
   //drive methods
@@ -77,6 +88,8 @@ class Robot {
 
   //auto methods
   void intakeStart();
+
+  void test();
 
 };
 }  // namespace robot
