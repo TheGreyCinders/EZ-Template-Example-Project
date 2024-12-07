@@ -85,7 +85,7 @@ void initialize() {
   //rest
   pros::lcd::initialize();
   robot.initialize(alliance);
-  controllingPerson=JACKSON;
+  controllingPerson=ASHER;
 }
 
 void autonomous() {
