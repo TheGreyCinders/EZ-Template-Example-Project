@@ -90,6 +90,7 @@ class Robot {
   void intakeStart();
 
   void test();
+  void test2();
 
 };
 }  // namespace robot

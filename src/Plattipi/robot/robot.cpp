@@ -4,25 +4,29 @@
 #include "Plattipi/utils.hpp"  // IWYU pragma: keep
 #include "pros/rtos.hpp"
 
-//test paths
-ASSET(firstpath_txt);
-ASSET(mogotoringstack_txt);
-ASSET(ringstacktobackup_txt);
-ASSET(rushTest_txt);
-
 //blue left
-ASSET(BLstarttoalliancestake_txt);
-ASSET(BLmogotoringstacks_txt);
-ASSET(BLringstacktobackup_txt);
-ASSET(BLbackuptocorner_txt);
-ASSET(BLcornertobackup2_txt);
-ASSET(BLbackup2tocenter_txt);
+ASSET(BL1mogotoringstacks_txt);
+ASSET(BL2ringstacktobackup_txt);
+ASSET(BL3backuptocorner_txt);
+ASSET(BL4cornertobackup2_txt);
+ASSET(BL5backup2tocenter_txt);
 
 //blue right
-ASSET(BRstarttomogo_txt);
-ASSET(BRmogotocenter_txt);
-ASSET(BRcentertobackup_txt);
-ASSET(BRbackuptocorner_txt);
+ASSET(BR1starttomogo_txt);
+ASSET(BR2mogotoringstacks_txt);
+ASSET(BR3ringstackstocorner_txt);
+
+//red left
+ASSET(RL1mogotoringstacks_txt);
+ASSET(RL2ringstacktobackup_txt);
+ASSET(RL3backuptocorner_txt);
+ASSET(RL4cornertobackup2_txt);
+ASSET(RL5backup2tocenter_txt);
+
+//red right
+ASSET(RR1starttomogo_txt);
+ASSET(RR2mogotoringstacks_txt);
+ASSET(RR3ringstackstocorner_txt);
 
 namespace plattipi {
 namespace robot {
@@ -69,6 +73,10 @@ namespace robot {
     //   intakeStart();
     // }};
 
+    // colorSortingToggle = true;
+
+    m_drive_train.llChassis.setPose(0, 0, 0);
+
     pros::Task colorSortTask {[=] (void) {
       colorSortAuto();
     }};
@@ -78,60 +86,22 @@ namespace robot {
     }};
   }
 
-
-
-  void Robot::autoTest() {
-
-    //set pose
-    m_drive_train.llChassis.setPose(-50.809, 35.475, 270);
-    // m_drive_train.llChassis.follow(firstpath_txt, 10, 5000, false, false);
-    m_drive_train.llChassis.follow(rushTest_txt, 10, 5000, false, false);
-    m_mogo_mech.toggleGrabbed();
-    pros::delay(100);
-
-    //ring stacks
-    intakeIntake();
-    conveyorIntake();
-    periodic();
-    m_drive_train.llChassis.follow(mogotoringstack_txt, 12, 5000, true, false);
-    pros::delay(1500);
-
-    //drop mogo
-    m_drive_train.llChassis.turnToHeading(135, 2, {.maxSpeed = 120}, false);
-    m_mogo_mech.toggleGrabbed();
-    pros::delay(100);
-
-    //alliance ring stack
-    m_drive_train.llChassis.follow(ringstacktobackup_txt, 10, 5000, true, false);
-    pros::delay(50);
-    intakeStop();
-    conveyorStop();
-    periodic();
-
-    m_drive_train.llChassis.turnToHeading(90, 1000, {.maxSpeed = 120}, false);
-    m_drive_train.llChassis.moveToPoint(-61, 2.5, 1000, {.maxSpeed = 120}, false);
-    pros::delay(1000);
-    intakeIntake();
-    conveyorIntake();
-    periodic();
-    pros::delay(3000);
-  }
-
   void Robot::autoBlueLeft() {
+    m_alliance = 1; //blue
     colorSortingToggle = true;
-    double cornerInX{61};
+    double cornerInX{64};
     double cornerInY{-59};
-    double cornerOutX{56};
-    double cornerOutY{-54};
+    double cornerOutX{55};
+    double cornerOutY{-50};
     //set pose
-    m_drive_train.llChassis.setPose(59, -12.5, 0);
+    m_drive_train.llChassis.setPose(59, -13, 0);
 
     //start pose
     m_intake.intakeIntake();
     m_arm.toggleIn();
 
     //move to alliance stake
-    m_drive_train.llChassis.moveToPoint(59, 0, 1250, {.maxSpeed = 65}, true);
+    m_drive_train.llChassis.moveToPoint(59, 0, 1250, {.maxSpeed = 50}, true);
     m_drive_train.llChassis.turnToHeading(272.5, 1250, {.maxSpeed = 65}, true);
     m_intake.intakeStop();
     m_drive_train.llChassis.moveToPoint(63, 0, 750, {.maxSpeed = 65}, true);
@@ -148,11 +118,11 @@ namespace robot {
     m_drive_train.llChassis.waitUntilDone();
 
     //grab mogo
-    m_drive_train.llChassis.moveToPoint(56, 0, 1000, {.maxSpeed = 65}, true);
+    m_drive_train.llChassis.moveToPoint(57, 0, 1000, {.maxSpeed = 65}, true);
     m_drive_train.llChassis.waitUntilDone();
-    m_drive_train.llChassis.turnToHeading(90, 1000, {.maxSpeed = 50}, true);
-    m_drive_train.llChassis.moveToPoint(47, 1, 1000, {.forwards = false, .maxSpeed = 65}, true);
-    m_drive_train.llChassis.waitUntil(8);
+    m_drive_train.llChassis.turnToHeading(90, 1500, {.maxSpeed = 70}, true);
+    m_drive_train.llChassis.moveToPoint(46, 1, 1000, {.forwards = false, .maxSpeed = 65}, true);
+    m_drive_train.llChassis.waitUntil(10);
     m_mogo_mech.toggleGrabbed();
 
     m_drive_train.llChassis.waitUntilDone();
@@ -162,14 +132,14 @@ namespace robot {
 
     pros::delay(250);
 
-    m_drive_train.llChassis.follow(BLmogotoringstacks_txt, 10, 5000, true, true);
+    m_drive_train.llChassis.follow(BL1mogotoringstacks_txt, 10, 5000, true, true);
     m_drive_train.llChassis.waitUntilDone();
 
     pros::delay(1000);
 
     // //go to corner
-    m_drive_train.llChassis.follow(BLringstacktobackup_txt, 10, 4000, false, true);
-    m_drive_train.llChassis.follow(BLbackuptocorner_txt, 10, 1500, true, true);
+    m_drive_train.llChassis.follow(BL2ringstacktobackup_txt, 10, 4000, false, true);
+    m_drive_train.llChassis.follow(BL3backuptocorner_txt, 10, 1500, true, true);
     m_drive_train.llChassis.waitUntilDone();
     pros::delay(500);
     // m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
@@ -184,47 +154,208 @@ namespace robot {
     m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY,800, {.forwards = false, .maxSpeed = 50}, true);
     m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
     //go to center
-    m_drive_train.llChassis.follow(BLcornertobackup2_txt, 10, 2000, false, true);
+    // m_drive_train.llChassis.follow(BL4cornertobackup2_txt, 10, 2000, false, true);
+    m_drive_train.llChassis.moveToPoint(24, -50, 2000, {.maxSpeed = 100}, true);
+    m_drive_train.llChassis.turnToHeading(350, 2000, {.maxSpeed = 100}, true);
     m_drive_train.llChassis.waitUntilDone();
     intakeStop();
     conveyorStop();
-    m_drive_train.llChassis.follow(BLbackup2tocenter_txt, 10, 2000, true, true);
+    m_arm.toggleOut();
+    m_arm.toggleOut();
+    m_drive_train.llChassis.moveToPoint(20, 20, 2000, {.maxSpeed = 65}, true);
+    // m_drive_train.llChassis.follow(BL5backup2tocenter_txt, 10, 2000, true, true);
+  }
+
+
+  void Robot::autoRedLeft() {
+    m_alliance = 2; //red
+    colorSortingToggle = true;
+    double cornerInX{-64};
+    double cornerInY{59};
+    double cornerOutX{-55};
+    double cornerOutY{50};
+    //set pose
+    m_drive_train.llChassis.setPose(-59, 13.25, 180);
+
+    //start pose
+    m_intake.intakeIntake();
+    m_arm.toggleIn();
+
+    //move to alliance stake
+    m_drive_train.llChassis.moveToPoint(-59, 0, 1250, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.turnToHeading(90, 1250, {.maxSpeed = 65}, true);
+    m_intake.intakeStop();
+    m_drive_train.llChassis.moveToPoint(-63, 0, 750, {.maxSpeed = 65}, true);
+
+    m_drive_train.llChassis.waitUntilDone();
+
+    //score on stake
+    intakeIntake();
+    conveyorIntake();
+    pros::delay(650);
+    intakeStop();
+    conveyorStop();
+
+    m_drive_train.llChassis.waitUntilDone();
+
+    //grab mogo
+    m_drive_train.llChassis.moveToPoint(-57, 0, 1000, {.maxSpeed = 65}, true);
+    m_drive_train.llChassis.waitUntilDone();
+    m_drive_train.llChassis.turnToHeading(-90, 1500, {.maxSpeed = 70}, true);
+    m_drive_train.llChassis.moveToPoint(-46, -1, 1000, {.forwards = false, .maxSpeed = 65}, true);
+    m_drive_train.llChassis.waitUntil(10);
+    m_mogo_mech.toggleGrabbed();
+
+    m_drive_train.llChassis.waitUntilDone();
+
+    //grab ring stacks
+    sortingControl = true;
+
+    pros::delay(250);
+
+    m_drive_train.llChassis.follow(RL1mogotoringstacks_txt, 10, 5000, true, true);
+    m_drive_train.llChassis.waitUntilDone();
+
+    pros::delay(1000);
+
+    // //go to corner
+    m_drive_train.llChassis.follow(RL2ringstacktobackup_txt, 10, 4000, false, true);
+    m_drive_train.llChassis.follow(RL3backuptocorner_txt, 10, 1500, true, true);
+    m_drive_train.llChassis.waitUntilDone();
+    pros::delay(500);
+    // m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY,800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY,800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY,800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    //go to center
+    m_drive_train.llChassis.follow(RL4cornertobackup2_txt, 10, 2000, false, true);
+    m_drive_train.llChassis.waitUntilDone();
+    intakeStop();
+    conveyorStop();
+    armToggleOut();
+    armToggleOut();
+    m_drive_train.llChassis.follow(RL5backup2tocenter_txt, 10, 2000, true, true);
   }
 
   void Robot::autoBlueRight() {
-    //set pose
-    m_drive_train.llChassis.setPose(53.25, 13.5, 90);
+    m_alliance = 1; //blue
+    colorSortingToggle = true;
+    double cornerInX{59.5};
+    double cornerInY{59};
+    double cornerOutX{55.5};
+    double cornerOutY{52.5};
 
-    //start movement
-    m_drive_train.llChassis.follow(BRstarttomogo_txt, 10, 3, false, false);
-    m_mogo_mech.toggleGrabbed();
+   m_drive_train.llChassis.setPose(51, 14, 90);
+
+    m_arm.toggleIn();
+
+    //grab mogo
+    m_drive_train.llChassis.follow(BR1starttomogo_txt, 12, 2000, false, true);
+    // m_drive_train.llChassis.waitUntil(44.5);
+    m_drive_train.llChassis.waitUntilDone();
+    mogoToggle();
+    m_drive_train.llChassis.waitUntilDone();
+    intakeIntake();
+    sortingControl = true;
+
     pros::delay(75);
 
-    //center ring stack
-    intakeIntakeSort();
+    // //intake ring stacks
+    m_drive_train.llChassis.follow(BR2mogotoringstacks_txt, 10, 6000, true, true);
+    m_drive_train.llChassis.waitUntil(20);
     conveyorIntake();
-    periodic();
-    m_drive_train.llChassis.follow(BRmogotocenter_txt, 10, true, false);
+    m_drive_train.llChassis.waitUntilDone();
 
-    //go to corner
-    m_drive_train.llChassis.follow(BRcentertobackup_txt, 10, 4, false, false);
-    m_drive_train.llChassis.follow(BRbackuptocorner_txt, 10, 4, true, false);
-    pros::delay(10000);
-  }
-
-  void Robot::autoRedLeft() {
-    //set pose
-
+    // //corner RNG
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY,800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY,800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY,800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY,800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    pros::delay(9000);
+    // //drop in corner
+    m_drive_train.llChassis.follow(BR3ringstackstocorner_txt, 10, 3250, false, true);
+    // m_drive_train.llChassis.moveToPoint(45, 45, 1500, {.forwards = false, .maxSpeed = 75}, true);
+    // m_drive_train.llChassis.turnToHeading(225, 1500, {.maxSpeed = 75}, true);
+    // m_drive_train.llChassis.moveToPoint(cornerOutX, 55.5, 1500, {.forwards = false, .maxSpeed = 75}, true);
+    m_drive_train.llChassis.waitUntilDone();
+    intakeStop();
+    conveyorStop();
+    mogoToggle();
+    m_drive_train.llChassis.moveToPoint(45, -45, 1500, {.maxSpeed = 75}, true);
   }
 
   void Robot::autoRedRight() {
-    //set pose
+    m_alliance = 2; //red
+    colorSortingToggle = true;
+    double cornerInX{-59.5};
+    double cornerInY{-59};
+    double cornerOutX{-55.5};
+    double cornerOutY{-52.5};
 
+    m_drive_train.llChassis.setPose(-51, -14, 270);
+
+    // m_drive_train.llChassis.moveToPoint(-20, -16, 5000);
+
+    m_arm.toggleIn();
+
+    //grab mogo
+    m_drive_train.llChassis.follow(RR1starttomogo_txt, 12, 2000, false, true);
+    // m_drive_train.llChassis.waitUntil(44.5);
+    m_drive_train.llChassis.waitUntilDone();
+    mogoToggle();
+    m_drive_train.llChassis.waitUntilDone();
+    intakeIntake();
+    sortingControl = true;
+
+    pros::delay(75);
+
+    // //intake ring stacks
+    m_drive_train.llChassis.follow(RR2mogotoringstacks_txt, 10, 6000, true, true);
+    m_drive_train.llChassis.waitUntil(20);
+    conveyorIntake();
+    m_drive_train.llChassis.waitUntilDone();
+
+    // //corner RNG
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY,800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY, 800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY,800, {.maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, cornerOutY,800, {.forwards = false, .maxSpeed = 50}, true);
+    m_drive_train.llChassis.moveToPoint(cornerInX, cornerInY, 800, {.maxSpeed = 50}, true);
+
+    // //drop in corner
+    // m_drive_train.llChassis.follow(RR3ringstackstocorner_txt, 10, 6000, false, true);
+    m_drive_train.llChassis.moveToPoint(-45, -45, 1500, {.forwards = false, .maxSpeed = 75}, true);
+    m_drive_train.llChassis.turnToHeading(45, 1500, {.maxSpeed = 75}, true);
+    m_drive_train.llChassis.moveToPoint(cornerOutX, -55.5, 1500, {.forwards = false, .maxSpeed = 75}, true);
+    m_drive_train.llChassis.waitUntilDone();
+    intakeStop();
+    conveyorStop();
+    mogoToggle();
+    m_drive_train.llChassis.moveToPoint(-45, -45, 1500, {.maxSpeed = 75}, true);
   }
 
+
   bool mogoGrabbed = false;
-
-
 
   void Robot::periodic() {
     while (true) {
@@ -234,9 +365,12 @@ namespace robot {
       m_arm.periodic();
       //mogo mech
       
-      pros::lcd::print(1, "Blue: %f", m_drive_train.llChassis.getPose().x);
-      pros::lcd::print(2, "Red: %f", m_drive_train.llChassis.getPose().y);
-      pros::lcd::print(3, "Color: %i", m_drive_train.llChassis.getPose().theta);
+      pros::lcd::print(1, "Blue: %f", m_intake.getBlue());
+      pros::lcd::print(2, "Red: %f", m_intake.getRed());
+      pros::lcd::print(3, "Color: %i", m_intake.getColor());
+      pros::lcd::print(4, "X: %f", m_drive_train.llChassis.getPose().x);
+      pros::lcd::print(5, "Y: %f", m_drive_train.llChassis.getPose().y);
+      pros::lcd::print(6, "Theta: %f", m_drive_train.llChassis.getPose().theta);
       pros::delay(10);
     }
   }
@@ -253,6 +387,7 @@ namespace robot {
         m_conveyor.intake();
       }
     } else {
+          pros::lcd::print(7, "test");
       if ((detectTime + END_TIME) < pros::millis()) {
         m_conveyor.retract();
         detected = false;
@@ -351,6 +486,10 @@ namespace robot {
 
   void Robot::test() {
     m_conveyor.extend();
+  }
+
+  void Robot::test2() {
+    m_conveyor.retract();
   }
 }  // namespace robot
 }  // namespace plattipi

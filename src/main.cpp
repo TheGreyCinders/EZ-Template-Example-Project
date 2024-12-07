@@ -156,7 +156,14 @@ void opcontrol() {
     }
 
     if (gp1.get_digital_new_press(DIGITAL_DOWN)) {
-      autonomous();
+      // autonomous();
+      // robot.autoRedLeft();
+      // robot.toggleColorSorting();
+      robot.test();
+    }
+
+    if (gp1.get_digital_new_press(DIGITAL_RIGHT)) {
+      robot.test2();
     }
 
     // robot.periodic();  

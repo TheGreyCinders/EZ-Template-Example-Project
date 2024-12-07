@@ -20,6 +20,7 @@ namespace subsystems {
         double detectionRed{0};
         pros::c::optical_rgb_s_t detections;
         int detectionColor{0};
+        double maxColor{0};
 
         static constexpr double REVERSE_TIME{100};
         static constexpr double CONTINUE_TIME{200};

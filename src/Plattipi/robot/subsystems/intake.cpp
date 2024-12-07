@@ -56,9 +56,9 @@ namespace subsystems {
     }
 
     int Intake::detectColorRGB(double red, double blue) {
-        if (red > 1750) {
+        if (red > 1250 && (red>blue)) {
             return 1;
-        } else if (blue > 1750) {
+        } else if (blue > 1250 && (blue>red)) {
             return 2;
         } else {
             return 0;
