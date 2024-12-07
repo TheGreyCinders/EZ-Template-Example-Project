@@ -90,10 +90,11 @@ void initialize() {
 
 void autonomous() {
   // robot.autoTest();
-  robot.autoBlueLeft();
+  // robot.autoBlueLeft();
   // robot.autoBlueRight();
-  // robot.autoRedLeft();
+  robot.autoRedLeft();
   // robot.autoRedRight();
+  // robot.autoSkillsBlue();
 }
 
 void disable() {}
@@ -158,12 +159,12 @@ void opcontrol() {
     if (gp1.get_digital_new_press(DIGITAL_DOWN)) {
       // autonomous();
       // robot.autoRedLeft();
-      // robot.toggleColorSorting();
-      robot.test();
+      robot.toggleColorSorting();
+      // robot.test();
     }
 
     if (gp1.get_digital_new_press(DIGITAL_RIGHT)) {
-      robot.test2();
+      // robot.test2();
     }
 
     // robot.periodic();  

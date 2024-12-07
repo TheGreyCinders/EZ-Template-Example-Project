@@ -56,6 +56,7 @@ class Robot {
   void autoBlueRight();
   void autoRedLeft();
   void autoRedRight();
+  void autoSkillsBlue();
   void periodic();
 
   void colorEjection();

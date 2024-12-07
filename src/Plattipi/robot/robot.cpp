@@ -89,12 +89,12 @@ namespace robot {
   void Robot::autoBlueLeft() {
     m_alliance = 1; //blue
     colorSortingToggle = true;
-    double cornerInX{64};
-    double cornerInY{-59};
-    double cornerOutX{55};
-    double cornerOutY{-50};
+    double cornerInX{62.5};
+    double cornerInY{-62.5};
+    double cornerOutX{54};
+    double cornerOutY{-54};
     //set pose
-    m_drive_train.llChassis.setPose(59, -13, 0);
+    m_drive_train.llChassis.setPose(59, -13.25, 0);
 
     //start pose
     m_intake.intakeIntake();
@@ -102,7 +102,7 @@ namespace robot {
 
     //move to alliance stake
     m_drive_train.llChassis.moveToPoint(59, 0, 1250, {.maxSpeed = 50}, true);
-    m_drive_train.llChassis.turnToHeading(272.5, 1250, {.maxSpeed = 65}, true);
+    m_drive_train.llChassis.turnToHeading(270, 1250, {.maxSpeed = 65}, true);
     m_intake.intakeStop();
     m_drive_train.llChassis.moveToPoint(63, 0, 750, {.maxSpeed = 65}, true);
 
@@ -118,10 +118,11 @@ namespace robot {
     m_drive_train.llChassis.waitUntilDone();
 
     //grab mogo
-    m_drive_train.llChassis.moveToPoint(57, 0, 1000, {.maxSpeed = 65}, true);
+    m_drive_train.llChassis.moveToPoint(57.25, 0, 1000, {.maxSpeed = 65}, true);
     m_drive_train.llChassis.waitUntilDone();
-    m_drive_train.llChassis.turnToHeading(90, 1500, {.maxSpeed = 70}, true);
-    m_drive_train.llChassis.moveToPoint(46, 1, 1000, {.forwards = false, .maxSpeed = 65}, true);
+    m_drive_train.llChassis.turnToHeading(90, 2000, {.maxSpeed = 40}, true);
+    pros::delay(375);
+    m_drive_train.llChassis.moveToPoint(46, 0, 1000, {.forwards = false, .maxSpeed = 65}, true);
     m_drive_train.llChassis.waitUntil(10);
     m_mogo_mech.toggleGrabbed();
 
@@ -161,7 +162,7 @@ namespace robot {
     intakeStop();
     conveyorStop();
     m_arm.toggleOut();
-    m_arm.toggleOut();
+    // m_arm.toggleOut();
     m_drive_train.llChassis.moveToPoint(20, 20, 2000, {.maxSpeed = 65}, true);
     // m_drive_train.llChassis.follow(BL5backup2tocenter_txt, 10, 2000, true, true);
   }
@@ -171,9 +172,9 @@ namespace robot {
     m_alliance = 2; //red
     colorSortingToggle = true;
     double cornerInX{-64};
-    double cornerInY{59};
-    double cornerOutX{-55};
-    double cornerOutY{50};
+    double cornerInY{59.5};
+    double cornerOutX{-54};
+    double cornerOutY{54};
     //set pose
     m_drive_train.llChassis.setPose(-59, 13.25, 180);
 
@@ -201,8 +202,9 @@ namespace robot {
     //grab mogo
     m_drive_train.llChassis.moveToPoint(-57, 0, 1000, {.maxSpeed = 65}, true);
     m_drive_train.llChassis.waitUntilDone();
-    m_drive_train.llChassis.turnToHeading(-90, 1500, {.maxSpeed = 70}, true);
-    m_drive_train.llChassis.moveToPoint(-46, -1, 1000, {.forwards = false, .maxSpeed = 65}, true);
+    m_drive_train.llChassis.turnToHeading(-90, 2000, {.maxSpeed = 60}, true);
+    pros::delay(375);
+    m_drive_train.llChassis.moveToPoint(-46, 0, 1000, {.forwards = false, .maxSpeed = 65}, true);
     m_drive_train.llChassis.waitUntil(10);
     m_mogo_mech.toggleGrabbed();
 
@@ -240,7 +242,7 @@ namespace robot {
     intakeStop();
     conveyorStop();
     armToggleOut();
-    armToggleOut();
+    // armToggleOut();
     m_drive_train.llChassis.follow(RL5backup2tocenter_txt, 10, 2000, true, true);
   }
 
@@ -255,9 +257,10 @@ namespace robot {
    m_drive_train.llChassis.setPose(51, 14, 90);
 
     m_arm.toggleIn();
+    m_intake.intakeOuttake();
 
     //grab mogo
-    m_drive_train.llChassis.follow(BR1starttomogo_txt, 12, 2000, false, true);
+    m_drive_train.llChassis.follow(BR1starttomogo_txt, 11, 2000, false, true);
     // m_drive_train.llChassis.waitUntil(44.5);
     m_drive_train.llChassis.waitUntilDone();
     mogoToggle();
@@ -303,7 +306,7 @@ namespace robot {
     m_alliance = 2; //red
     colorSortingToggle = true;
     double cornerInX{-59.5};
-    double cornerInY{-59};
+    double cornerInY{-60};
     double cornerOutX{-55.5};
     double cornerOutY{-52.5};
 
@@ -312,6 +315,7 @@ namespace robot {
     // m_drive_train.llChassis.moveToPoint(-20, -16, 5000);
 
     m_arm.toggleIn();
+    intakeOuttake();
 
     //grab mogo
     m_drive_train.llChassis.follow(RR1starttomogo_txt, 12, 2000, false, true);
@@ -352,6 +356,27 @@ namespace robot {
     conveyorStop();
     mogoToggle();
     m_drive_train.llChassis.moveToPoint(-45, -45, 1500, {.maxSpeed = 75}, true);
+  }
+
+  void Robot::autoSkillsBlue() {
+    m_alliance = 2;
+    colorSortingToggle = false;
+
+    m_drive_train.llChassis.setPose(-60, 0, 90);
+
+    m_intake.intakeIntake();
+    m_arm.toggleIn();
+
+    m_drive_train.llChassis.moveToPoint(-54, 0, 2000, {.maxSpeed =75}, true);
+    pros::delay(500);
+
+    m_drive_train.llChassis.moveToPoint(-64, 0, 2000, {.forwards = false, .maxSpeed = 60}, true);
+    m_drive_train.llChassis.waitUntilDone();
+
+    intakeIntake();
+    conveyorIntake();
+
+    pros::delay(3000);
   }
 
 
