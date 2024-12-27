@@ -86,6 +86,7 @@ class Robot {
 
   //mogo methods
   void mogoToggle();
+  void testToggle();
 
   //auto methods
   void intakeStart();

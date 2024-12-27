@@ -18,6 +18,7 @@ static constexpr signed char CONVEYOR_2_PORT = 6;
 
 static constexpr int8_t MOGO_PNEUMATICS = 'g';
 static constexpr int8_t COLOR_PNEUMATICS = 'a';
+static constexpr int8_t TEST_PNEUMATICS = 'c';
 
 static constexpr signed char ARM_ONE = -14;
 static constexpr signed char ARM_TWO = 15;
@@ -44,6 +45,7 @@ pros::Motor intakeMotor{INTAKE_PORT, pros::v5::MotorCartridge::blue, pros::v5::M
 
 pros::adi::DigitalOut mogoPiston(MOGO_PNEUMATICS);
 pros::adi::DigitalOut colorSortPiston(COLOR_PNEUMATICS);
+pros::adi::DigitalOut testPiston(TEST_PNEUMATICS);
 
 pros::Optical colorSensor(COLOR_SENSOR_PORT);
 
@@ -57,7 +59,7 @@ plattipi::robot::subsystems::DriveTrain drive{};
 plattipi::robot::subsystems::Intake intake{intakeMotor, colorSensor};
 plattipi::robot::subsystems::Conveyor conveyor{conveyorMotors, colorSortPiston};
 plattipi::robot::subsystems::Arm arm{armleft, armright, extension};
-plattipi::robot::subsystems::MogoMech mogo{mogoPiston};
+plattipi::robot::subsystems::MogoMech mogo{mogoPiston, mogoPiston};
 
 plattipi::robot::Robot robot{intake, conveyor, arm, mogo};
 
@@ -165,6 +167,10 @@ void opcontrol() {
 
     if (gp1.get_digital_new_press(DIGITAL_RIGHT)) {
       // robot.test2();
+    }
+
+    if (gp1.get_digital_new_press(DIGITAL_X)) {
+      robot.testToggle();
     }
 
     // robot.periodic();  

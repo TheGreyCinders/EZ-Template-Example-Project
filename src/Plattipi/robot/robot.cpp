@@ -509,6 +509,10 @@ namespace robot {
     m_mogo_mech.toggleGrabbed();
   }
 
+  void Robot::testToggle() {
+    m_mogo_mech.togglePiston();
+  }
+
   void Robot::test() {
     m_conveyor.extend();
   }
